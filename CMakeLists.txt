@@ -49,6 +49,7 @@ add_library(
   kalman_arm_controller
   SHARED
   hardware/r6bot_hardware.cpp
+  hardware/can_driver.cpp
   controller/r6bot_controller.cpp
 )
 
