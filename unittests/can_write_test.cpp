@@ -13,11 +13,22 @@ int main()
         printf("Setting joints setpoints\r\n");
         for (int i = 0; i < 6; i++)
         {
-            CAN_driver::joints[i].setpoint.torque_mNm = 0xfa02;
-            CAN_driver::joints[i].setpoint.acceleration_0RPMs_1 = 0xffff;
-            CAN_driver::joints[i].setpoint.velocity_0RPM_1 = -9975;
-            CAN_driver::joints[i].setpoint.position_0deg01 = 1000;
-            CAN_driver::joints[i].setpoint.lastSetpointTime = setpoint_cnt;
+            if (i == setpoint_cnt % 6)
+            {
+                CAN_driver::joints[i].setpoint.torque_mNm = 0xfa02;
+                CAN_driver::joints[i].setpoint.acceleration_0RPMs_1 = 0xffff;
+                CAN_driver::joints[i].setpoint.velocity_0RPM_1 = (setpoint_cnt / 6 % 2 ? -1 : 1) * 9975;
+                CAN_driver::joints[i].setpoint.position_0deg01 = 1000;
+                CAN_driver::joints[i].setpoint.lastSetpointTime = setpoint_cnt;
+            }
+            else
+            {
+                CAN_driver::joints[i].setpoint.torque_mNm = 0xfa02;
+                CAN_driver::joints[i].setpoint.acceleration_0RPMs_1 = 0xffff;
+                CAN_driver::joints[i].setpoint.velocity_0RPM_1 = 0;
+                CAN_driver::joints[i].setpoint.position_0deg01 = 1000;
+                CAN_driver::joints[i].setpoint.lastSetpointTime = setpoint_cnt;
+            }
         }
         setpoint_cnt++;
         printf("Writing CAN data\r\n");
