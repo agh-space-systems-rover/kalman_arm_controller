@@ -7,8 +7,10 @@
 
 namespace CAN_handlers
 {
+    // For each command, define a handler function
     int handle_joint_status(uint32_t identifier, uint8_t *data, uint8_t len);
 
+    // Define the command handler array
     const canCmdHandler_t HANDLES[] = {
         {CMD_JOINT_STATUS, sizeof(jointMotorStatus_t), handle_joint_status},
     };

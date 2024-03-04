@@ -15,6 +15,7 @@
 
 #include <linux/can.h>
 #include <linux/can/raw.h>
+#include <exception>
 /*
 Potrzebne:
 - 6 jointów globalnych

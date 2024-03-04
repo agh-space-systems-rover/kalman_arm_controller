@@ -2,6 +2,13 @@
 
 namespace CAN_driver
 {
+    /**
+     * @brief Initialize the CAN driver.
+     *
+     * Initializes the CAN driver and binds the socket to the can0 interface
+     *
+     * @return int 0 on success, 1 on failure
+     */
     int init()
     {
         // Get socket connection
@@ -32,6 +39,14 @@ namespace CAN_driver
         return 0;
     }
 
+    /**
+     * @brief Read data from the CAN bus.
+     *
+     * Reads data from the CAN bus by checking the number of available bytes and then reading all of them.
+     * Also handles the received frames by calling `handle_frame` for each frame.
+     *
+     * @return int 0 on success, 1 on failure
+     */
     int read()
     {
         int nbytes = 0;
@@ -66,13 +81,29 @@ namespace CAN_driver
         }
     }
 
+    /**
+     * @brief Handle a received frame.
+     *
+     * Decodes the frame and calls the appropriate handler function.
+     *
+     * @param frame The frame to handle
+     * @return int 0 on success, 1 on failure
+     */
     int handle_frame(canfd_frame frame)
     {
         // Decode the frame
         uint8_t joint_id = frame.can_id >> 7;
         uint8_t command = frame.can_id - (joint_id << 7);
-
-        CAN_handlers::HANDLES[command].func(frame.can_id, frame.data, frame.len);
+        try
+        {
+            CAN_handlers::HANDLES[command].func(frame.can_id, frame.data, frame.len);
+        }
+        catch (const std::exception &e)
+        {
+            printf("Caught exception: %s\r\n", e.what());
+            return 1;
+        }
+        return 0;
     }
 
     int write()
