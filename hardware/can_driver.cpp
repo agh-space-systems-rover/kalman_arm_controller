@@ -108,7 +108,42 @@ namespace CAN_driver
 
     int write()
     {
+        // Write data from global joints
+        for (int i = 1; i <= 6; i++)
+        {
+            write_joint_setpoint(i);
+        }
+
+        return 0;
+    }
+
+    int write_joint_setpoint(uint8_t joint_id)
+    {
+        // Write data from a single joint
+        uint16_t can_id = (joint_id << 7) + CMD_SETPOINT;
+        if (1 <= joint_id && joint_id <= 4)
+        {
+            return write_data(can_id, (uint8_t *)&joints[joint_id - 1].setpoint, sizeof(jointCmdSetpoint_t));
+        }
+        else if (joint_id == 5 && joint_id == 6)
+        {
+            // TODO implement differential
+        }
+    }
+
+    int write_data(uint16_t can_id, uint8_t *data, uint8_t len)
+    {
         struct canfd_frame frame;
+        frame.can_id = can_id;
+        frame.len = len;
+        memcpy(frame.data, data, len);
+
+        if (::write(sock, &frame, sizeof(frame)) < 0)
+        {
+            perror("Write");
+            return 1;
+        }
+        return 0;
     }
 
     int close()

@@ -34,6 +34,8 @@ namespace CAN_driver
     int init();
     int read();
     int write();
+    int write_joint_setpoint(uint8_t joint_id);
+    int write_data(uint16_t can_id, uint8_t *data, uint8_t len);
     int handle_frame(canfd_frame frame);
     int close();
 }

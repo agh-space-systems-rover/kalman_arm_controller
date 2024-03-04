@@ -13,7 +13,7 @@ namespace CAN_handlers
         uint8_t command = identifier - (joint_id << 7);
 
         jointMotorStatus_t *status = (jointMotorStatus_t *)data;
-
+        // TODO: Handle differential joints
         // Update the joint status
         CAN_driver::joints[joint_id].status = *status;
         return 0;
