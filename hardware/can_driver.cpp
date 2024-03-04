@@ -2,11 +2,6 @@
 
 namespace CAN_driver
 {
-    int sock;
-    struct sockaddr_can addr;
-    struct ifreq ifr;
-    extern jointStatus_t joints[6];
-
     int init()
     {
         // Get socket connection

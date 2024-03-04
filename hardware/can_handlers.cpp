@@ -8,6 +8,6 @@ int CAN_handlers::handle_joint_status(uint32_t identifier, uint8_t *data, uint8_
     jointMotorStatus_t *status = (jointMotorStatus_t *)data;
 
     // Update the joint status
-    CAN_driver::joints[joint_id].status = status;
+    CAN_driver::joints[joint_id].status = *status;
     return 0;
 }
