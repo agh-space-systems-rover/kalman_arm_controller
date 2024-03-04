@@ -5,10 +5,9 @@ namespace CAN_driver
     int sock;
     struct sockaddr_can addr;
     struct ifreq ifr;
-    jointStatus_t joints[6];
+    extern jointStatus_t joints[6];
 
-
-    bool init()
+    int init()
     {
         // Get socket connection
         if ((sock = socket(PF_CAN, SOCK_RAW, CAN_RAW)) < 0)
@@ -38,31 +37,55 @@ namespace CAN_driver
         return 0;
     }
 
-    bool read()
+    int read()
     {
-        struct canfd_frame frame;
-        int nbytes;
+        int nbytes = 0;
 
-        // TODO: fionread to read all available frames
-        nbytes = read(sock, &frame, sizeof(struct canfd_frame));
+        uint8_t *data;
 
-        // TODO: scan all bytes and update joint status
+        // Get available bytes
+        ioctl(sock, FIONREAD, &nbytes);
+
+        data = (uint8_t *)malloc(nbytes);
+
+        nbytes = ::read(sock, data, nbytes);
+
         if (nbytes < 0)
         {
             perror("Read");
             return 1;
         }
-    }
 
-    bool write()
-    {
         struct canfd_frame frame;
 
+        // Parse the data
+        for (int i = 0; i < nbytes; i += CANFD_MTU)
+        {
+            frame = *((struct canfd_frame *)data + i);
 
-
+            if (frame.len > 0)
+            {
+                // Handle the frame
+                handle_frame(frame);
+            }
+        }
     }
 
-    bool close()
+    int handle_frame(canfd_frame frame)
+    {
+        // Decode the frame
+        uint8_t joint_id = frame.can_id >> 7;
+        uint8_t command = frame.can_id - (joint_id << 7);
+
+        CAN_handlers::HANDLES[command].func(frame.can_id, frame.data, frame.len);
+    }
+
+    int write()
+    {
+        struct canfd_frame frame;
+    }
+
+    int close()
     {
         return (::close(sock) < 0);
     }

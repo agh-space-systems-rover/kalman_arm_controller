@@ -1,7 +1,8 @@
-# ifndef KALMAN_ARM_CONTROLLER__HARDWARE__CAN_DRIVER_HPP
-# define KALMAN_ARM_CONTROLLER__HARDWARE__CAN_DRIVER_HPP
+#ifndef KALMAN_ARM_CONTROLLER__HARDWARE__CAN_DRIVER_HPP
+#define KALMAN_ARM_CONTROLLER__HARDWARE__CAN_DRIVER_HPP
 
 #include "can_types.hpp"
+#include "can_handlers.hpp"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -22,14 +23,13 @@ Potrzebne:
 - wysyłanie ramek z wartościami zadanych do odpowiednich jointów
 */
 
-namespace CAN_driver {
-    bool init();
-    bool read();
-    bool write();
-    bool close();
+namespace CAN_driver
+{
+    int init();
+    int read();
+    int write();
+    int handle_frame(canfd_frame frame);
+    int close();
 }
 
-
-
-
-# endif // KALMAN_ARM_CONTROLLER__HARDWARE__CAN_DRIVER_HPP
+#endif // KALMAN_ARM_CONTROLLER__HARDWARE__CAN_DRIVER_HPP
