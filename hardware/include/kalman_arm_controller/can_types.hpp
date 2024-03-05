@@ -7,20 +7,7 @@
 #define KALMAN_ARM_CONTROLLER__HARDWARE__CAN_TYPES_HPP_
 
 #include <cstdint>
-#include <can_messages.hpp>
-
-/**
- * @brief Enumeration representing the positioning status.
- */
-typedef enum
-{
-    POSITIONING_NO,          ///< No positioning
-    POSITIONING_IN_PROGRESS, ///< Positioning in progress
-    POSITIONING_TIMEOUT,     ///< Positioning timeout
-    POSITIONING_ERROR,       ///< Positioning error
-    POSITIONING_SUCCESS,     ///< Positioning success
-    POSITIONING_ENUM_SIZE    ///< Size of the positioning status enum
-} positioningStatus_t;
+#include "can_messages.hpp"
 
 /**
  * @brief Structure representing a CAN message handler.

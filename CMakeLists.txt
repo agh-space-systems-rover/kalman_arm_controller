@@ -53,6 +53,7 @@ add_library(
   SHARED
   hardware/r6bot_hardware.cpp
   hardware/can_driver.cpp
+  hardware/can_handlers.cpp
   controller/r6bot_controller.cpp
 )
 
@@ -91,7 +92,7 @@ install(
   DESTINATION share/kalman_arm_controller
 )
 install(
-    TARGETS send_trajectory
+    TARGETS send_trajectory read_test write_test
     RUNTIME DESTINATION lib/kalman_arm_controller
 )
 

@@ -1,4 +1,4 @@
-#include "kalman_arm_controller/can_driver.hpp"
+#include "../hardware/include/kalman_arm_controller/can_driver.hpp"
 #include <stdio.h>
 #include <stdlib.h>
 #include <exception>
