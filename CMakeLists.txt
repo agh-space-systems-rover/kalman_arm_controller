@@ -39,9 +39,6 @@ endforeach()
 
 ## COMPILE
 add_executable(send_trajectory reference_generator/send_trajectory.cpp)
-## UNIT TESTS
-add_executable(read_test unittests/can_read_test.cpp)
-add_executable(write_test unittests/can_write_test.cpp)
 
 ament_target_dependencies(
   send_trajectory PUBLIC
@@ -92,7 +89,7 @@ install(
   DESTINATION share/kalman_arm_controller
 )
 install(
-    TARGETS send_trajectory read_test write_test
+    TARGETS send_trajectory
     RUNTIME DESTINATION lib/kalman_arm_controller
 )
 
