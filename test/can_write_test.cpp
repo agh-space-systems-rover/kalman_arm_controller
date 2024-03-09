@@ -7,6 +7,12 @@ int main()
 {
     printf("Testing can_driver.cpp\r\n");
     CAN_driver::init();
+
+    // Write velocity command to enable the joints
+    uint16_t can_id = (1 << 7) + CMD_VELOCITY;
+    uint8_t data[LEN_CMD_VELOCITY] = {0xff, 0xff, 0xff, 0xff, 0, 0};
+    CAN_driver::write_data(can_id, data, LEN_CMD_VELOCITY);
+
     uint8_t setpoint_cnt = 0;
     while (1)
     {
