@@ -2,7 +2,7 @@
 #define KALMAN_ARM_CONTROLLER__HARDWARE__CAN_HANDLERS_HPP
 
 #include "can_types.hpp"
-#include "can_driver.hpp"
+#include "can_vars.hpp"
 #include "can_messages.hpp"
 
 namespace CAN_handlers

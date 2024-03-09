@@ -122,7 +122,7 @@ int CAN_driver::write_joint_setpoint(uint8_t joint_id)
     uint16_t can_id = (joint_id << 7) + CMD_SETPOINT;
     if (1 <= joint_id && joint_id <= 4)
     {
-        return write_data(can_id, (uint8_t *)&joints[joint_id - 1].setpoint, sizeof(jointCmdSetpoint_t));
+        return write_data(can_id, (uint8_t *)&CAN_vars::joints[joint_id - 1].setpoint, sizeof(jointCmdSetpoint_t));
     }
     else if (joint_id == 5 && joint_id == 6)
     {

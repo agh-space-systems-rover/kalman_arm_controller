@@ -3,6 +3,7 @@
 
 #include "can_types.hpp"
 #include "can_handlers.hpp"
+#include "can_vars.hpp"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -29,7 +30,6 @@ namespace CAN_driver
     int sock;
     struct sockaddr_can addr;
     struct ifreq ifr;
-    jointStatus_t joints[6];
 
     int init();
     extern int read();

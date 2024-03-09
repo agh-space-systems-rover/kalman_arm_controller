@@ -15,7 +15,7 @@ namespace CAN_handlers
         jointMotorStatus_t *status = (jointMotorStatus_t *)data;
         // TODO: Handle differential joints
         // Update the joint status
-        CAN_driver::joints[joint_id].status = *status;
+        CAN_vars::joints[joint_id].status = *status;
         return 0;
     }
 
