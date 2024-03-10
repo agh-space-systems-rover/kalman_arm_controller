@@ -47,6 +47,12 @@ add_executable(can_read_test
   hardware/can_vars.cpp
 )
 
+add_executable(can_write_test
+  test/can_write_test.cpp
+  hardware/can_driver.cpp
+  hardware/can_handlers.cpp
+  hardware/can_vars.cpp
+)
 include_directories(hardware/include)
 
 ament_target_dependencies(
@@ -104,6 +110,10 @@ install(
 )
 
 install(TARGETS can_read_test
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+install(TARGETS can_write_test
   DESTINATION lib/${PROJECT_NAME}
 )
 

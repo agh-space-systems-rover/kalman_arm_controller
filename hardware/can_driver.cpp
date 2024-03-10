@@ -122,9 +122,10 @@ int CAN_driver::handle_frame(canfd_frame frame)
 int CAN_driver::write()
 {
     // Write data from global joints
-    for (int i = 1; i <= 6; i++)
+    for (int i = 4; i <= 4; i++)
     {
         write_joint_setpoint(i);
+        // usleep(1000);
     }
 
     return 0;
@@ -151,6 +152,13 @@ int CAN_driver::write_data(uint16_t can_id, uint8_t *data, uint8_t len)
     frame.can_id = can_id;
     frame.len = len;
     memcpy(frame.data, data, len);
+    printf("Writing frame with ID %03X and length %d\r\n\tData: {", frame.can_id, frame.len);
+    // print data
+    for (int i = 0; i < len; i++)
+    {
+        printf("%02X ", frame.data[i]);
+    }
+    printf("}\r\n");
 
     if (::write(sock, &frame, sizeof(frame)) < 0)
     {
