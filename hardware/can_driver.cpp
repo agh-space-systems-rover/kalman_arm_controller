@@ -108,7 +108,8 @@ int CAN_driver::handle_frame(canfd_frame frame)
     try
     {
         printf("Handling frame with ID %03X and length %d, command: %d, joint id:  %d\r\n", frame.can_id, frame.len, command, joint_id);
-        CAN_handlers::HANDLES[command].func(frame.can_id, frame.data, frame.len);
+        if (CAN_handlers::HANDLES.find(command) != CAN_handlers::HANDLES.end())
+            CAN_handlers::HANDLES[command].func(frame.can_id, frame.data, frame.len);
     }
     catch (const std::exception &e)
     {

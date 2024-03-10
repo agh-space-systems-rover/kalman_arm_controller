@@ -4,16 +4,15 @@
 #include "can_types.hpp"
 #include "can_vars.hpp"
 #include "can_messages.hpp"
+#include <unordered_map>
 
 namespace CAN_handlers
 {
     // For each command, define a handler function
     int handle_joint_status(uint32_t identifier, uint8_t *data, uint8_t len);
 
-    // Define the command handler array
-    const canCmdHandler_t HANDLES[] = {
-        {CMD_JOINT_STATUS, sizeof(jointMotorStatus_t), handle_joint_status},
-    };
+    // Declare the command handler array
+    extern std::unordered_map<uint8_t, canCmdHandler_t> HANDLES;
 } // namespace CAN_handlers
 
 #endif // KALMAN_ARM_CONTROLLER__HARDWARE__CAN_HANDLERS_HPP

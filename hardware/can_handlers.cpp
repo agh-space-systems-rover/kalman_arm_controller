@@ -2,6 +2,11 @@
 
 namespace CAN_handlers
 {
+    // Define the command handler array
+    std::unordered_map<uint8_t, canCmdHandler_t> HANDLES = {
+        {CMD_JOINT_STATUS, {CMD_JOINT_STATUS, sizeof(jointMotorStatus_t), handle_joint_status}},
+    };
+
     /**
      * @brief Handle the joint status command.
      *
@@ -11,6 +16,8 @@ namespace CAN_handlers
     {
         uint8_t joint_id = identifier >> 7;
         uint8_t command = identifier - (joint_id << 7);
+
+        joint_id--;
 
         jointMotorStatus_t *status = (jointMotorStatus_t *)data;
         // TODO: Handle differential joints
