@@ -6,14 +6,16 @@
 int main()
 {
     printf("Testing can_driver.cpp\r\n");
-    CAN_driver::init();
+    if (CAN_driver::init())
+        return 1;
     while (1)
     {
         printf("Reading CAN data\r\n");
         try
         {
-            if (CAN_driver::read())
-                continue;
+            for (int i = 0; i < 1000; i++)
+                if (CAN_driver::read())
+                    break;
         }
         catch (const std::exception &e)
         {

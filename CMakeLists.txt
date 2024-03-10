@@ -40,6 +40,15 @@ endforeach()
 ## COMPILE
 add_executable(send_trajectory reference_generator/send_trajectory.cpp)
 
+add_executable(can_read_test
+  test/can_read_test.cpp
+  hardware/can_driver.cpp
+  hardware/can_handlers.cpp
+  hardware/can_vars.cpp
+)
+
+include_directories(hardware/include)
+
 ament_target_dependencies(
   send_trajectory PUBLIC
   ${REF_GEN_INCLUDE_DEPENDS}
@@ -92,6 +101,10 @@ install(
 install(
     TARGETS send_trajectory
     RUNTIME DESTINATION lib/kalman_arm_controller
+)
+
+install(TARGETS can_read_test
+  DESTINATION lib/${PROJECT_NAME}
 )
 
 install(TARGETS kalman_arm_controller

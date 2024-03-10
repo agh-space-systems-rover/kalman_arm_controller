@@ -27,13 +27,13 @@ Potrzebne:
 
 namespace CAN_driver
 {
-    int sock;
-    struct sockaddr_can addr;
-    struct ifreq ifr;
+    extern int sock;
+    extern struct sockaddr_can addr;
+    extern struct ifreq ifr;
 
     int init();
-    extern int read();
-    extern int write();
+    int read();
+    int write();
     int write_joint_setpoint(uint8_t joint_id);
     int write_data(uint16_t can_id, uint8_t *data, uint8_t len);
     int handle_frame(canfd_frame frame);

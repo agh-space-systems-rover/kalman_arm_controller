@@ -1,5 +1,12 @@
 #include "kalman_arm_controller/can_driver.hpp"
 
+namespace CAN_driver
+{
+    int sock = 0;
+    struct sockaddr_can addr = {};
+    struct ifreq ifr = {};
+}
+
 /**
  * @brief Initialize the CAN driver.
  *
@@ -9,6 +16,7 @@
  */
 int CAN_driver::init()
 {
+    printf("In CAN_driver::init\r\n");
     // Get socket connection
     if ((sock = socket(PF_CAN, SOCK_RAW, CAN_RAW)) < 0)
     {
@@ -34,29 +42,37 @@ int CAN_driver::init()
         return 1;
     }
 
+    // Set timeout for reading
+    struct timeval tv;
+    tv.tv_sec = 0;
+    tv.tv_usec = 10;
+    setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (const char *)&tv, sizeof tv);
+
+    printf("Finished CAN init! \r\n");
     return 0;
 }
 
 /**
  * @brief Read data from the CAN bus.
  *
- * Reads data from the CAN bus by checking the number of available bytes and then reading all of them.
+ * Reads data from the CAN bus one frame by the time.
  * Also handles the received frames by calling `handle_frame` for each frame.
  *
  * @return int 0 on success, 1 on failure
  */
-extern int CAN_driver::read()
+int CAN_driver::read()
 {
-    int nbytes = 0;
+    // printf("In CAN_driver::read\r\n");
+    int nbytes = CANFD_MTU;
 
     uint8_t *data;
 
-    // Get available bytes
-    ioctl(sock, FIONREAD, &nbytes);
-
     data = (uint8_t *)malloc(nbytes);
 
+    // while (nbytes == CANFD_MTU)
+    // {
     nbytes = ::read(sock, data, nbytes);
+    printf("Read %d bytes\r\n", nbytes);
 
     if (nbytes < 0)
     {
@@ -64,19 +80,21 @@ extern int CAN_driver::read()
         return 1;
     }
 
+    if (nbytes == 0)
+    {
+        printf("No data received\r\n");
+        return 0;
+    }
+
     struct canfd_frame frame;
 
     // Parse the data
-    for (int i = 0; i < nbytes; i += CANFD_MTU)
-    {
-        frame = *((struct canfd_frame *)data + i);
+    frame = *((struct canfd_frame *)data);
 
-        if (frame.len > 0)
-        {
-            // Handle the frame
-            handle_frame(frame);
-        }
-    }
+    // printf("Received frame with ID %03X and length %d\r\n", frame.can_id, frame.len);
+    handle_frame(frame);
+    // }
+
     return 0;
 }
 
@@ -105,7 +123,7 @@ int CAN_driver::handle_frame(canfd_frame frame)
     return 0;
 }
 
-extern int CAN_driver::write()
+int CAN_driver::write()
 {
     // Write data from global joints
     for (int i = 1; i <= 6; i++)
