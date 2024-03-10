@@ -45,7 +45,7 @@ int CAN_driver::init()
     // Set timeout for reading
     struct timeval tv;
     tv.tv_sec = 0;
-    tv.tv_usec = 10;
+    tv.tv_usec = 1;
     setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (const char *)&tv, sizeof tv);
 
     printf("Finished CAN init! \r\n");
@@ -69,31 +69,25 @@ int CAN_driver::read()
 
     data = (uint8_t *)malloc(nbytes);
 
-    // while (nbytes == CANFD_MTU)
-    // {
-    nbytes = ::read(sock, data, nbytes);
-    printf("Read %d bytes\r\n", nbytes);
-
-    if (nbytes < 0)
+    while (nbytes == CANFD_MTU)
     {
-        perror("Read");
-        return 1;
+        nbytes = ::read(sock, data, nbytes);
+        // printf("Read %d bytes\r\n", nbytes);
+
+        if (nbytes < 0)
+        {
+            perror("Read");
+            return 1;
+        }
+
+        struct canfd_frame frame;
+
+        // Parse the data
+        frame = *((struct canfd_frame *)data);
+
+        // printf("Received frame with ID %03X and length %d\r\n", frame.can_id, frame.len);
+        handle_frame(frame);
     }
-
-    if (nbytes == 0)
-    {
-        printf("No data received\r\n");
-        return 0;
-    }
-
-    struct canfd_frame frame;
-
-    // Parse the data
-    frame = *((struct canfd_frame *)data);
-
-    // printf("Received frame with ID %03X and length %d\r\n", frame.can_id, frame.len);
-    handle_frame(frame);
-    // }
 
     return 0;
 }
@@ -113,6 +107,7 @@ int CAN_driver::handle_frame(canfd_frame frame)
     uint8_t command = frame.can_id - (joint_id << 7);
     try
     {
+        printf("Handling frame with ID %03X and length %d, command: %d, joint id:  %d\r\n", frame.can_id, frame.len, command, joint_id);
         CAN_handlers::HANDLES[command].func(frame.can_id, frame.data, frame.len);
     }
     catch (const std::exception &e)
