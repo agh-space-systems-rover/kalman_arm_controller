@@ -1,4 +1,4 @@
-#include "../hardware/include/kalman_arm_controller/can_driver.hpp"
+#include "kalman_arm_controller/can_driver.hpp"
 #include <stdio.h>
 #include <stdlib.h>
 #include <exception>
@@ -12,7 +12,8 @@ int main()
         printf("Reading CAN data\r\n");
         try
         {
-            CAN_driver::read();
+            if (CAN_driver::read())
+                continue;
         }
         catch (const std::exception &e)
         {

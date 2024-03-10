@@ -3,7 +3,7 @@
 
 #include "can_types.hpp"
 #include "can_handlers.hpp"
-#include "can_vars.hpp"
+// #include "can_vars.hpp"
 
 #include <stdio.h>
 #include <stdlib.h>
