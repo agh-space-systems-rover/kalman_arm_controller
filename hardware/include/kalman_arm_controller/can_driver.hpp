@@ -9,6 +9,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <thread>
+#include <chrono>
 
 #include <net/if.h>
 #include <sys/ioctl.h>
@@ -32,7 +34,7 @@ namespace CAN_driver
     extern struct ifreq ifr;
 
     int init();
-    int read();
+    int read(int sock);
     int write();
     int write_joint_setpoint(uint8_t joint_id);
     int write_data(uint16_t can_id, uint8_t *data, uint8_t len);

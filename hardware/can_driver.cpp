@@ -1,4 +1,5 @@
 #include "kalman_arm_controller/can_driver.hpp"
+#include <thread>
 
 namespace CAN_driver
 {
@@ -29,7 +30,7 @@ int CAN_driver::init()
     setsockopt(sock, SOL_CAN_RAW, CAN_RAW_FD_FRAMES, &enable_fd_frames, sizeof(enable_fd_frames));
 
     // Set up the can interface
-    strcpy(ifr.ifr_name, "can0");
+    strcpy(ifr.ifr_name, "can1");
     ioctl(sock, SIOCGIFINDEX, &ifr);
 
     addr.can_family = AF_CAN;
@@ -49,7 +50,7 @@ int CAN_driver::init()
     setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (const char *)&tv, sizeof tv);
 
     printf("Finished CAN init! \r\n");
-    return 0;
+    return sock;
 }
 
 /**
@@ -60,8 +61,10 @@ int CAN_driver::init()
  *
  * @return int 0 on success, 1 on failure
  */
-int CAN_driver::read()
+int CAN_driver::read(int sock)
 {
+    printf("%d", sock);
+
     // printf("In CAN_driver::read\r\n");
     int nbytes = CANFD_MTU;
 
@@ -69,24 +72,29 @@ int CAN_driver::read()
 
     data = (uint8_t *)malloc(nbytes);
 
-    while (nbytes == CANFD_MTU)
+    while (true)
     {
-        nbytes = ::read(sock, data, nbytes);
-        // printf("Read %d bytes\r\n", nbytes);
-
-        if (nbytes < 0)
+        while (nbytes == CANFD_MTU)
         {
-            perror("Read");
-            return 1;
+            nbytes = ::read(sock, data, nbytes);
+            // printf("Read %d bytes\r\n", nbytes);
+
+            if (nbytes < 0)
+            {
+                perror("Read");
+                return 1;
+            }
+
+            struct canfd_frame frame;
+
+            // Parse the data
+            frame = *((struct canfd_frame *)data);
+
+            // printf("Received frame with ID %03X and length %d\r\n", frame.can_id, frame.len);
+            handle_frame(frame);
         }
-
-        struct canfd_frame frame;
-
-        // Parse the data
-        frame = *((struct canfd_frame *)data);
-
-        // printf("Received frame with ID %03X and length %d\r\n", frame.can_id, frame.len);
-        handle_frame(frame);
+        printf("sleeping");
+        usleep(1000);
     }
 
     return 0;
@@ -122,11 +130,37 @@ int CAN_driver::handle_frame(canfd_frame frame)
 int CAN_driver::write()
 {
     // Write data from global joints
-    for (int i = 4; i <= 4; i++)
+    // for (int i = 4; i <= 4; i++)
+    // {
+    //     write_joint_setpoint(i);
+    //     // usleep(1000);
+    // }
+    uint16_t can_id = (4 << 7) + CMD_SETPOINT;
+    uint8_t data_pos[LEN_CMD_SETPOINT] = {0xfa, 0x02, 0xff, 0xff, 0xd9, 0x09, 0xa0, 0xc9, 0xfa, 0xff, 0xcd, 0x00};
+
+    std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+    for (int i = 0; i < 5; i++)
     {
-        write_joint_setpoint(i);
-        // usleep(1000);
+        // CAN_driver::write_data(can_id, data_pos, LEN_CMD_SETPOINT);
+        write_joint_setpoint(4);
+        std::this_thread::sleep_for(std::chrono::microseconds(5000));
+
+        std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+
+        printf("Writing took %ld [us]\r\n", std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count());
+
+        begin = std::chrono::steady_clock::now();
     }
+
+    uint8_t data_pos2[LEN_CMD_SETPOINT] = {0xfa, 0x02, 0xff, 0xff, 0x00, 0x00, 0xa0, 0xc9, 0xfa, 0xff, 0xcd, 0x00};
+
+    for (int i = 0; i < 1; i++)
+    {
+        CAN_driver::write_data(can_id, data_pos2, LEN_CMD_SETPOINT);
+        std::this_thread::sleep_for(std::chrono::microseconds(1000));
+    }
+
+    // NOTE: nie działa gdy nie ma ustawiania na 0 XDD
 
     return 0;
 }
@@ -137,7 +171,7 @@ int CAN_driver::write_joint_setpoint(uint8_t joint_id)
     uint16_t can_id = (joint_id << 7) + CMD_SETPOINT;
     if (1 <= joint_id && joint_id <= 4)
     {
-        return write_data(can_id, (uint8_t *)&CAN_vars::joints[joint_id - 1].setpoint, sizeof(jointCmdSetpoint_t));
+        return write_data(can_id, (uint8_t *)&CAN_vars::joints[joint_id - 1].setpoint, LEN_CMD_SETPOINT);
     }
     else if (joint_id == 5 && joint_id == 6)
     {

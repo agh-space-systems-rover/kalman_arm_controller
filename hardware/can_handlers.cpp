@@ -1,5 +1,7 @@
 #include "kalman_arm_controller/can_handlers.hpp"
 
+#include <stdio.h>
+
 namespace CAN_handlers
 {
     // Define the command handler array
@@ -23,6 +25,8 @@ namespace CAN_handlers
         // TODO: Handle differential joints
         // Update the joint status
         CAN_vars::joints[joint_id].status = *status;
+        printf("Joint %d:\r\n\tVelocity: %d\r\n\tPosition: %d\r\n", joint_id, CAN_vars::joints[joint_id].status.velocity, CAN_vars::joints[joint_id].status.position);
+
         return 0;
     }
 
