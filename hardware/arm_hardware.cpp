@@ -25,6 +25,8 @@ namespace kalman_arm_controller
             }
         }
 
+        CAN_driver::init();
+
         return CallbackReturn::SUCCESS;
     }
 
@@ -78,7 +80,10 @@ namespace kalman_arm_controller
 
     return_type ArmSystem::read_joint_states()
     {
-        CAN_driver::read();
+        // CAN_driver::read();
+        std::lock_guard<std::mutex> lock(CAN_driver::m);
+        RCLCPP_INFO(rclcpp::get_logger("my_logger"), "position: %ld", CAN_vars::joints[0].status.position);
+
         // TODO read config and data from CAN_vars::joints and update joint_position_ and joint_velocities_
         return return_type::OK;
     }

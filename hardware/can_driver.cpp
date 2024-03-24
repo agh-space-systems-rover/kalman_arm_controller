@@ -1,5 +1,7 @@
 #include "kalman_arm_controller/can_driver.hpp"
 #include <poll.h>
+#include <mutex>
+#include <vector>
 
 #define BUFFER_SIZE 1024
 #define TIMEOUT_MS 1 // 5 seconds
@@ -9,6 +11,9 @@ namespace CAN_driver
     int sock = 0;
     struct sockaddr_can addr = {};
     struct ifreq ifr = {};
+    std::mutex m;
+    std::thread reader;
+    bool should_run = true;
 }
 
 /**
@@ -33,7 +38,7 @@ int CAN_driver::init()
     setsockopt(sock, SOL_CAN_RAW, CAN_RAW_FD_FRAMES, &enable_fd_frames, sizeof(enable_fd_frames));
 
     // Set up the can interface
-    strcpy(ifr.ifr_name, "can0");
+    strcpy(ifr.ifr_name, "can1");
     ioctl(sock, SIOCGIFINDEX, &ifr);
 
     addr.can_family = AF_CAN;
@@ -52,82 +57,37 @@ int CAN_driver::init()
     tv.tv_usec = 1;
     setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (const char *)&tv, sizeof tv);
 
+    CAN_driver::reader = std::thread(CAN_driver::read);
+
     printf("Finished CAN init! \r\n");
     return 0;
 }
 
-/**
- * @brief Read data from the CAN bus.
- *
- * Reads data from the CAN bus one frame by the time.
- * Also handles the received frames by calling `handle_frame` for each frame.
- *
- * @return int 0 on success, 1 on failure
- */
 int CAN_driver::read()
 {
-    // printf("In CAN_driver::read\r\n");
-    // int nbytes = CANFD_MTU;
-
-    // uint8_t *data;
-
-    // data = (uint8_t *)malloc(nbytes);
-
-    // while (nbytes == CANFD_MTU)
-    // {
-    //     nbytes = ::read(sock, data, nbytes);
-    //     // printf("Read %d bytes\r\n", nbytes);
-
-    //     if (nbytes < 0)
-    //     {
-    //         perror("Read");
-    //         return 1;
-    //     }
-
-    //     struct canfd_frame frame;
-
-    //     // Parse the data
-    //     frame = *((struct canfd_frame *)data);
-
-    //     // printf("Received frame with ID %03X and length %d\r\n", frame.can_id, frame.len);
-    //     handle_frame(frame);
-    // }
-    struct pollfd fds[1];
     char buffer[BUFFER_SIZE];
-
-    // Initialize poll structure
-    fds[0].fd = sock;
-    fds[0].events = POLLIN;
-    RCLCPP_INFO(rclcpp::get_logger("my_logger"), "pollin");
-
-    int ret = poll(fds, 1, TIMEOUT_MS); // Wait for events with timeout
-    if (ret == -1)
-    {
-        perror("Poll error");
-        exit(EXIT_FAILURE);
-    }
-    else if (ret == 0)
-    {
-        printf("Timeout occurred\n");
-    }
-    else
-    {
-        if (fds[0].revents & POLLIN)
-        { // Check if socket is readable
-            struct sockaddr_in client_addr;
-            socklen_t client_len = sizeof(client_addr);
-            ssize_t num_bytes = recvfrom(sock, buffer, BUFFER_SIZE, 0, (struct sockaddr *)&client_addr, &client_len);
-            if (num_bytes == -1)
-            {
-                perror("Receive error");
-                exit(EXIT_FAILURE);
-            }
-            buffer[num_bytes] = '\0'; // Null-terminate the received data
-            printf("Received message: %s\n", buffer);
+    bool should_sleep = false;
+    while (CAN_driver::should_run){
+        if (should_sleep){
+            std::this_thread::sleep_for(std::chrono::milliseconds{1});
         }
-    }
-    RCLCPP_INFO(rclcpp::get_logger("my_logger"), "poll result %d", ret);
+        should_sleep = false;
+        std::lock_guard<std::mutex> lock(CAN_driver::m); // Yay for RAII
 
+        ssize_t num_bytes = recv(sock, buffer, BUFFER_SIZE, MSG_DONTWAIT);
+        if (num_bytes < 0)
+        {
+            should_sleep = true;
+            continue;
+        }
+
+        buffer[num_bytes] = '\0'; // Null-terminate the received data
+        struct canfd_frame frame;
+
+        frame = *((struct canfd_frame *)buffer);
+        handle_frame(frame);
+
+    }
     return 0;
 }
 
@@ -146,13 +106,13 @@ int CAN_driver::handle_frame(canfd_frame frame)
     uint8_t command = frame.can_id - (joint_id << 7);
     try
     {
-        printf("Handling frame with ID %03X and length %d, command: %d, joint id:  %d\r\n", frame.can_id, frame.len, command, joint_id);
+        // RCLCPP_INFO(rclcpp::get_logger("my_logger"), "Handling frame with ID %03X and length %d, command: %d, joint id:  %d\r\n", frame.can_id, frame.len, command, joint_id);
         if (CAN_handlers::HANDLES.find(command) != CAN_handlers::HANDLES.end())
             CAN_handlers::HANDLES[command].func(frame.can_id, frame.data, frame.len);
     }
     catch (const std::exception &e)
     {
-        printf("Caught exception: %s\r\n", e.what());
+        // RCLCPP_INFO(rclcpp::get_logger("my_logger"), "Caught exception: %s\r\n", e.what());
         return 1;
     }
     return 0;
@@ -211,5 +171,7 @@ int CAN_driver::write_data(uint16_t can_id, uint8_t *data, uint8_t len)
 
 int CAN_driver::close()
 {
+    CAN_driver::should_run = false;
+    CAN_driver::reader.join();
     return (::close(sock) < 0);
 }
