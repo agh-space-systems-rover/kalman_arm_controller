@@ -82,6 +82,12 @@ namespace kalman_arm_controller
 
     return_type ArmSystem::write_joint_commands()
     {
+        for (int i = 0; i < 6; i++)
+        {
+            CAN_vars::joints[i].setpoint.position_0deg01 = int32_t(joint_position_[i]*0.01);
+            // joint_velocities_command_[i] = joint_velocities_[i];
+            CAN_driver::write_joint_setpoint(i);
+        }
         // TODO write commands to CAN_vars::joints from joint_position_command_ and joint_velocities_command_
     }
 

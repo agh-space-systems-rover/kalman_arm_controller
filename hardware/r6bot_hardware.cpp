@@ -118,6 +118,7 @@ return_type RobotSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Durat
 
 return_type RobotSystem::write(const rclcpp::Time &, const rclcpp::Duration &)
 {
+  // CAN_driver::write();
   return return_type::OK;
 }
 

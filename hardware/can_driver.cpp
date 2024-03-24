@@ -134,6 +134,8 @@ int CAN_driver::write()
 int CAN_driver::write_joint_setpoint(uint8_t joint_id)
 {
     // Write data from a single joint
+    joint_id += 1;
+
     uint16_t can_id = (joint_id << 7) + CMD_SETPOINT;
     if (1 <= joint_id && joint_id <= 4)
     {

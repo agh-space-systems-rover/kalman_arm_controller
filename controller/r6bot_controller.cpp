@@ -25,6 +25,9 @@
 #include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
 #include "rclcpp_lifecycle/state.hpp"
 
+#include "kalman_arm_controller/arm_hardware.hpp"
+// #include "can_driver.hpp"
+
 using config_type = controller_interface::interface_configuration_type;
 
 namespace kalman_arm_controller
