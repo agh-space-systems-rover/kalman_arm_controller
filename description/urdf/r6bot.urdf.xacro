@@ -11,6 +11,6 @@
 
   <!-- Import r6bot ros2_control description -->
   <xacro:include filename="$(find kalman_arm_controller)/ros2_control/r6bot.ros2_control.xacro" />
-  <xacro:r6bot_ros2_control name="r6bot"/>
+  <xacro:r6bot_ros2_control name="kalman_arm"/>
 
 </robot>

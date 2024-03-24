@@ -17,6 +17,10 @@
 #include <linux/can.h>
 #include <linux/can/raw.h>
 #include <exception>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include "rclcpp/rclcpp.hpp"
+
 /*
 Potrzebne:
 - 6 jointów globalnych

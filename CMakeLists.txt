@@ -10,6 +10,7 @@ set(HW_IF_INCLUDE_DEPENDS
   pluginlib
   rcpputils
   hardware_interface
+  rclcpp
 )
 set(REF_GEN_INCLUDE_DEPENDS
   kdl_parser
@@ -22,6 +23,7 @@ set(CONTROLLER_INCLUDE_DEPENDS
   controller_interface
   realtime_tools
   trajectory_msgs
+  rclcpp
 )
 
 # find dependencies
@@ -54,6 +56,16 @@ add_executable(can_write_test
   hardware/can_vars.cpp
 )
 include_directories(hardware/include)
+ament_target_dependencies(
+  can_read_test PUBLIC
+  ${REF_GEN_INCLUDE_DEPENDS}
+)
+
+ament_target_dependencies(
+  can_write_test PUBLIC
+  ${REF_GEN_INCLUDE_DEPENDS}
+)
+
 
 ament_target_dependencies(
   send_trajectory PUBLIC
@@ -63,7 +75,7 @@ ament_target_dependencies(
 add_library(
   kalman_arm_controller
   SHARED
-  hardware/r6bot_hardware.cpp
+  hardware/arm_hardware.cpp
   hardware/can_driver.cpp
   hardware/can_handlers.cpp
   hardware/can_vars.cpp

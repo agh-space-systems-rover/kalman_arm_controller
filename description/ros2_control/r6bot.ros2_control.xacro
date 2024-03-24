@@ -6,7 +6,7 @@
     <ros2_control name="${name}" type="system">
 
       <hardware>
-        <plugin>kalman_arm_controller/RobotSystem</plugin>
+        <plugin>kalman_arm_controller/ArmSystem</plugin>
       </hardware>
 
       <joint name="joint_1">
@@ -99,14 +99,14 @@
         <state_interface name="velocity"/>
       </joint>
 
-      <sensor name="tcp_fts_sensor">
+      <!-- <sensor name="tcp_fts_sensor">
         <state_interface name="force.x"/>
         <state_interface name="force.y"/>
         <state_interface name="force.z"/>
         <state_interface name="torque.x"/>
         <state_interface name="torque.y"/>
         <state_interface name="torque.z"/>
-      </sensor>
+      </sensor> -->
 
     </ros2_control>
 

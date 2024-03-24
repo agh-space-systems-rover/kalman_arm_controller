@@ -1,4 +1,8 @@
 #include "kalman_arm_controller/can_driver.hpp"
+#include <poll.h>
+
+#define BUFFER_SIZE 1024
+#define TIMEOUT_MS 1 // 5 seconds
 
 namespace CAN_driver
 {
@@ -63,31 +67,66 @@ int CAN_driver::init()
 int CAN_driver::read()
 {
     // printf("In CAN_driver::read\r\n");
-    int nbytes = CANFD_MTU;
+    // int nbytes = CANFD_MTU;
 
-    uint8_t *data;
+    // uint8_t *data;
 
-    data = (uint8_t *)malloc(nbytes);
+    // data = (uint8_t *)malloc(nbytes);
 
-    while (nbytes == CANFD_MTU)
+    // while (nbytes == CANFD_MTU)
+    // {
+    //     nbytes = ::read(sock, data, nbytes);
+    //     // printf("Read %d bytes\r\n", nbytes);
+
+    //     if (nbytes < 0)
+    //     {
+    //         perror("Read");
+    //         return 1;
+    //     }
+
+    //     struct canfd_frame frame;
+
+    //     // Parse the data
+    //     frame = *((struct canfd_frame *)data);
+
+    //     // printf("Received frame with ID %03X and length %d\r\n", frame.can_id, frame.len);
+    //     handle_frame(frame);
+    // }
+    struct pollfd fds[1];
+    char buffer[BUFFER_SIZE];
+
+    // Initialize poll structure
+    fds[0].fd = sock;
+    fds[0].events = POLLIN;
+    RCLCPP_INFO(rclcpp::get_logger("my_logger"), "pollin");
+
+    int ret = poll(fds, 1, TIMEOUT_MS); // Wait for events with timeout
+    if (ret == -1)
     {
-        nbytes = ::read(sock, data, nbytes);
-        // printf("Read %d bytes\r\n", nbytes);
-
-        if (nbytes < 0)
-        {
-            perror("Read");
-            return 1;
-        }
-
-        struct canfd_frame frame;
-
-        // Parse the data
-        frame = *((struct canfd_frame *)data);
-
-        // printf("Received frame with ID %03X and length %d\r\n", frame.can_id, frame.len);
-        handle_frame(frame);
+        perror("Poll error");
+        exit(EXIT_FAILURE);
     }
+    else if (ret == 0)
+    {
+        printf("Timeout occurred\n");
+    }
+    else
+    {
+        if (fds[0].revents & POLLIN)
+        { // Check if socket is readable
+            struct sockaddr_in client_addr;
+            socklen_t client_len = sizeof(client_addr);
+            ssize_t num_bytes = recvfrom(sock, buffer, BUFFER_SIZE, 0, (struct sockaddr *)&client_addr, &client_len);
+            if (num_bytes == -1)
+            {
+                perror("Receive error");
+                exit(EXIT_FAILURE);
+            }
+            buffer[num_bytes] = '\0'; // Null-terminate the received data
+            printf("Received message: %s\n", buffer);
+        }
+    }
+    RCLCPP_INFO(rclcpp::get_logger("my_logger"), "poll result %d", ret);
 
     return 0;
 }

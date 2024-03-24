@@ -1,5 +1,6 @@
 #include "kalman_arm_controller/arm_hardware.hpp"
-#include "arm_hardware.hpp"
+#include "rclcpp/rclcpp.hpp"
+// #include "arm_hardware.hpp"
 
 namespace kalman_arm_controller
 {
@@ -30,7 +31,7 @@ namespace kalman_arm_controller
     std::vector<hardware_interface::StateInterface> ArmSystem::export_state_interfaces()
     {
         std::vector<hardware_interface::StateInterface> state_interfaces;
-
+        
         int ind = 0;
         for (const auto &joint_name : joint_interfaces["position"])
         {
@@ -77,7 +78,9 @@ namespace kalman_arm_controller
 
     return_type ArmSystem::read_joint_states()
     {
+        CAN_driver::read();
         // TODO read config and data from CAN_vars::joints and update joint_position_ and joint_velocities_
+        return return_type::OK;
     }
 
     return_type ArmSystem::write_joint_commands()
@@ -86,8 +89,10 @@ namespace kalman_arm_controller
         {
             CAN_vars::joints[i].setpoint.position_0deg01 = int32_t(joint_position_[i]*0.01);
             // joint_velocities_command_[i] = joint_velocities_[i];
-            CAN_driver::write_joint_setpoint(i);
+            // CAN_driver::write_joint_setpoint(i);
         }
+        return return_type::OK;
+
         // TODO write commands to CAN_vars::joints from joint_position_command_ and joint_velocities_command_
     }
 
@@ -96,4 +101,4 @@ namespace kalman_arm_controller
 #include "pluginlib/class_list_macros.hpp"
 
 PLUGINLIB_EXPORT_CLASS(
-    kalman_arm_controller::RobotSystem, hardware_interface::SystemInterface)
+    kalman_arm_controller::ArmSystem, hardware_interface::SystemInterface)
