@@ -26,6 +26,10 @@ namespace CAN_driver
 int CAN_driver::init()
 {
     printf("In CAN_driver::init\r\n");
+
+    // Load default configuration
+    arm_config::load_default_config();
+
     // Get socket connection
     if ((sock = socket(PF_CAN, SOCK_RAW, CAN_RAW)) < 0)
     {
@@ -67,8 +71,10 @@ int CAN_driver::read()
 {
     char buffer[BUFFER_SIZE];
     bool should_sleep = false;
-    while (CAN_driver::should_run){
-        if (should_sleep){
+    while (CAN_driver::should_run)
+    {
+        if (should_sleep)
+        {
             std::this_thread::sleep_for(std::chrono::milliseconds{1});
         }
         should_sleep = false;
@@ -87,6 +93,7 @@ int CAN_driver::read()
         frame = *((struct canfd_frame *)buffer);
         handle_frame(frame);
 
+        CAN_vars::update_joint_status();
     }
     return 0;
 }
