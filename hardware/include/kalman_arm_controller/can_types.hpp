@@ -41,6 +41,7 @@ typedef struct __attribute__((__packed__))
     jointConfig_t *config;
     jointMoveStatus_t moveStatus;
     jointMoveSetpoint_t moveSetpoint;
+    jointMoveSetpoint_t moveSetpointDiff;
 } jointStatus_t;
 
 /**

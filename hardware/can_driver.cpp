@@ -127,6 +127,8 @@ int CAN_driver::handle_frame(canfd_frame frame)
 
 int CAN_driver::write()
 {
+    CAN_vars::update_joint_setpoint();
+
     // Write data from global joints
     for (int i = 4; i <= 4; i++)
     {
