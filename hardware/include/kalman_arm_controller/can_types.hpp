@@ -35,12 +35,31 @@ typedef struct
  */
 typedef struct __attribute__((__packed__))
 {
+    /**
+     * @brief Structure representing the status of a joint motor received from CAN.
+     */
     jointMotorStatus_t status;
+
+    /**
+     * @brief Structure representing the setpoint of a joint motor to send via CAN.
+     */
     jointCmdSetpoint_t setpoint;
 
-    jointConfig_t *config;
+    /**
+     * @brief Structure representing the received status of a joint motor already calculated to normal, humanreadable
+     * and supported by moveit format.
+     */
     jointMoveStatus_t moveStatus;
+
+    /**
+     * @brief Structure representing the setpoint of a joint motor already calculated to normal, humanreadable
+     * and supported by moveit format.
+     */
     jointMoveSetpoint_t moveSetpoint;
+
+    /**
+     * @brief Structure where the setpoint of differential joints is stored (later converted to `moveSetpoint`).
+     */
     jointMoveSetpoint_t moveSetpointDiff;
 } jointStatus_t;
 
