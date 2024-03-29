@@ -35,7 +35,8 @@ namespace CAN_driver
     extern struct sockaddr_can addr;
     extern struct ifreq ifr;
 
-    extern std::mutex m;
+    extern std::mutex m_read;
+    extern std::mutex m_write;
     extern std::thread reader;
     extern bool should_run;
 

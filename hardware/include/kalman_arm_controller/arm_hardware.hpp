@@ -4,6 +4,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <future>
 
 #include "can_driver.hpp"
 
@@ -38,6 +39,8 @@ namespace kalman_arm_controller
         std::vector<double> joint_velocities_command_;
         std::vector<double> joint_position_;
         std::vector<double> joint_velocities_;
+
+        std::future<void> writer;
 
         std::unordered_map<std::string, std::vector<std::string>> joint_interfaces = {
             {"position", {}}, {"velocity", {}}};

@@ -33,7 +33,7 @@ namespace kalman_arm_controller
     std::vector<hardware_interface::StateInterface> ArmSystem::export_state_interfaces()
     {
         std::vector<hardware_interface::StateInterface> state_interfaces;
-        
+
         int ind = 0;
         for (const auto &joint_name : joint_interfaces["position"])
         {
@@ -81,24 +81,50 @@ namespace kalman_arm_controller
     return_type ArmSystem::read_joint_states()
     {
         // CAN_driver::read();
-        std::lock_guard<std::mutex> lock(CAN_driver::m);
+        std::lock_guard<std::mutex> lock(CAN_driver::m_read);
         RCLCPP_INFO(rclcpp::get_logger("my_logger"), "position: %ld", CAN_vars::joints[0].status.position);
 
-        // TODO read config and data from CAN_vars::joints and update joint_position_ and joint_velocities_
+        for (int i = 0; i < 6; i++)
+        {
+            joint_position_[i] = CAN_vars::joints[i].moveStatus.position_deg;
+            joint_velocities_[i] = CAN_vars::joints[i].moveStatus.velocity_deg_s;
+        }
         return return_type::OK;
     }
 
     return_type ArmSystem::write_joint_commands()
     {
-        for (int i = 0; i < 6; i++)
         {
-            CAN_vars::joints[i].setpoint.position_0deg01 = int32_t(joint_position_[i]*0.01);
-            // joint_velocities_command_[i] = joint_velocities_[i];
-            // CAN_driver::write_joint_setpoint(i);
+            std::lock_guard<std::mutex> lock(CAN_driver::m_write);
+            for (int i = 0; i < 4; i++)
+            {
+                CAN_vars::joints[i].moveSetpoint.position_deg = joint_position_command_[i];
+                CAN_vars::joints[i].moveSetpoint.velocity_deg_s = joint_velocities_command_[i];
+                CAN_vars::joints[i].moveSetpoint.torque_Nm = 0x02fa;
+                CAN_vars::joints[i].moveSetpoint.acceleration_RPMs_1 = 0xffff;
+            }
+            for (int i = 4; i < 6; i++)
+            {
+                CAN_vars::joints[i].moveSetpointDiff.position_deg = joint_position_command_[i];
+                CAN_vars::joints[i].moveSetpointDiff.velocity_deg_s = joint_velocities_command_[i];
+                CAN_vars::joints[i].moveSetpointDiff.torque_Nm = 0x02fa;
+                CAN_vars::joints[i].moveSetpointDiff.acceleration_RPMs_1 = 0xffff;
+            }
         }
-        return return_type::OK;
 
-        // TODO write commands to CAN_vars::joints from joint_position_command_ and joint_velocities_command_
+        // Do not write if previous write is still in progress
+        if (writer.valid() && writer.wait_for(std::chrono::seconds(0)) != std::future_status::ready)
+        {
+            RCLCPP_WARN(rclcpp::get_logger("my_logger"), "Previous write still in progress");
+        }
+        else
+        {
+            // Run write in a separate thread
+            writer = std::async(std::launch::async, [&]
+                                { CAN_driver::write(); });
+        }
+
+        return return_type::OK;
     }
 
 } // namespace kalman_arm_controller
