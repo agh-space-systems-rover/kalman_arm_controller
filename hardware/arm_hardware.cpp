@@ -101,14 +101,14 @@ namespace kalman_arm_controller
                 CAN_vars::joints[i].moveSetpoint.position_deg = joint_position_command_[i];
                 CAN_vars::joints[i].moveSetpoint.velocity_deg_s = joint_velocities_command_[i];
                 CAN_vars::joints[i].moveSetpoint.torque_Nm = 0x02fa;
-                CAN_vars::joints[i].moveSetpoint.acceleration_RPMs_1 = 0xffff;
+                CAN_vars::joints[i].moveSetpoint.acceleration_deg_ss = 0xffff;
             }
             for (int i = 4; i < 6; i++)
             {
                 CAN_vars::joints[i].moveSetpointDiff.position_deg = joint_position_command_[i];
                 CAN_vars::joints[i].moveSetpointDiff.velocity_deg_s = joint_velocities_command_[i];
                 CAN_vars::joints[i].moveSetpointDiff.torque_Nm = 0x02fa;
-                CAN_vars::joints[i].moveSetpointDiff.acceleration_RPMs_1 = 0xffff;
+                CAN_vars::joints[i].moveSetpointDiff.acceleration_deg_ss = 0xffff;
             }
         }
 

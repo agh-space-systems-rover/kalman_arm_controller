@@ -26,6 +26,25 @@ typedef struct
 } canCmdHandler_t;
 
 /**
+ * @brief Structure representing the status of a joint motor laready calculated to normal, humanreadable
+ * and supported by moveit format.
+ */
+typedef struct
+{
+    float torque_Nm;
+    float velocity_deg_s;
+    float position_deg;
+} jointMoveStatus_t;
+
+typedef struct
+{
+    float torque_Nm;
+    float velocity_deg_s;
+    float position_deg;
+    float acceleration_deg_ss;
+} jointMoveSetpoint_t;
+
+/**
  * @brief Structure representing the status of a joint motor and its setpoint.
  *
  * This structure combines the joint motor status and the joint setpoint.
@@ -109,24 +128,5 @@ typedef struct
     uint16_t canRoverStatusSendPeriod_ms;
 
 } armConfig_t;
-
-/**
- * @brief Structure representing the status of a joint motor laready calculated to normal, humanreadable
- * and supported by moveit format.
- */
-typedef struct
-{
-    float torque_Nm;
-    float velocity_deg_s;
-    float position_deg;
-} jointMoveStatus_t;
-
-typedef struct
-{
-    float torque_Nm;
-    float velocity_deg_s;
-    float position_deg;
-    float acceleration_deg_ss;
-} jointMoveSetpoint_t;
 
 #endif // KALMAN_ARM_CONTROLLER__HARDWARE__CAN_TYPES_HPP_

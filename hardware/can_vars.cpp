@@ -1,5 +1,4 @@
 #include "kalman_arm_controller/can_vars.hpp"
-#include "can_vars.hpp"
 
 namespace CAN_vars
 {
