@@ -73,8 +73,8 @@ typedef struct __attribute__((__packed__))
     int8_t controllerTemerature_1deg;
 
     int16_t torque;
-    int16_t velocity;
-    int32_t position;
+    int16_t velocity; // RPM*100 dla direction != -1, RPM*10 dla direction == -1
+    int32_t position; // pozycja 0-36000 (co 0.01 deg)
 
     uint8_t inputVoltage_0V2;
 

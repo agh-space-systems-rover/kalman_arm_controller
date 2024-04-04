@@ -13,7 +13,8 @@ namespace CAN_driver
     int sock = 0;
     struct sockaddr_can addr = {};
     struct ifreq ifr = {};
-    std::mutex m;
+    std::mutex m_read;
+    std::mutex m_write;
     std::thread reader;
     bool should_run = true;
 }
@@ -28,6 +29,10 @@ namespace CAN_driver
 int CAN_driver::init()
 {
     printf("In CAN_driver::init\r\n");
+
+    // Load default configuration
+    arm_config::load_default_config();
+
     // Get socket connection
     if ((sock = socket(PF_CAN, SOCK_RAW, CAN_RAW)) < 0)
     {
@@ -91,6 +96,8 @@ int CAN_driver::read()
         // We don't need to lock the recv invocation
         std::lock_guard<std::mutex> lock(CAN_driver::m); // Yay for RAII
         handle_frame(frame);
+      
+        CAN_vars::update_joint_status();
     }
     return 0;
 }
@@ -124,11 +131,16 @@ int CAN_driver::handle_frame(canfd_frame frame)
 
 int CAN_driver::write()
 {
+    std::lock_guard<std::mutex> lock(CAN_driver::m_write);
+
+    CAN_vars::update_joint_setpoint();
+
     // Write data from global joints
-    for (int i = 4; i <= 4; i++)
+    for (int i = 0; i < 6; i++)
     {
         write_joint_setpoint(i);
-        // usleep(1000);
+
+        std::this_thread::sleep_for(std::chrono::microseconds(1000));
     }
 
     return 0;
@@ -140,13 +152,9 @@ int CAN_driver::write_joint_setpoint(uint8_t joint_id)
     joint_id += 1;
 
     uint16_t can_id = (joint_id << 7) + CMD_SETPOINT;
-    if (1 <= joint_id && joint_id <= 4)
+    if (1 <= joint_id && joint_id <= 6)
     {
         return write_data(can_id, (uint8_t *)&CAN_vars::joints[joint_id - 1].setpoint, sizeof(jointCmdSetpoint_t));
-    }
-    else if (joint_id == 5 && joint_id == 6)
-    {
-        // TODO implement differential
     }
     return 1;
 }

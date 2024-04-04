@@ -47,6 +47,7 @@ add_executable(can_read_test
   hardware/can_driver.cpp
   hardware/can_handlers.cpp
   hardware/can_vars.cpp
+  hardware/arm_config.cpp
 )
 
 add_executable(can_write_test
@@ -54,6 +55,7 @@ add_executable(can_write_test
   hardware/can_driver.cpp
   hardware/can_handlers.cpp
   hardware/can_vars.cpp
+  hardware/arm_config.cpp
 )
 include_directories(hardware/include)
 ament_target_dependencies(
@@ -76,10 +78,11 @@ add_library(
   kalman_arm_controller
   SHARED
   hardware/arm_hardware.cpp
+  hardware/arm_config.cpp
   hardware/can_driver.cpp
   hardware/can_handlers.cpp
   hardware/can_vars.cpp
-  controller/r6bot_controller.cpp
+  controller/arm_controller.cpp
 )
 
 target_compile_features(kalman_arm_controller PUBLIC cxx_std_17)

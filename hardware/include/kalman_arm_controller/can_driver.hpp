@@ -4,6 +4,7 @@
 #include "can_types.hpp"
 #include "can_handlers.hpp"
 // #include "can_vars.hpp"
+#include "arm_config.hpp"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -35,7 +36,8 @@ namespace CAN_driver
     extern struct sockaddr_can addr;
     extern struct ifreq ifr;
 
-    extern std::mutex m;
+    extern std::mutex m_read;
+    extern std::mutex m_write;
     extern std::thread reader;
     extern bool should_run;
 
