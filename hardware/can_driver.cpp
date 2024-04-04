@@ -2,6 +2,8 @@
 #include <poll.h>
 #include <mutex>
 #include <vector>
+#include <cerrno>
+#include <cstring>
 
 #define BUFFER_SIZE 1024
 #define TIMEOUT_MS 1 // 5 seconds
@@ -71,29 +73,30 @@ int CAN_driver::init()
 int CAN_driver::read()
 {
     char buffer[BUFFER_SIZE];
-    bool should_sleep = false;
-    while (CAN_driver::should_run)
-    {
-        if (should_sleep)
-        {
-            std::this_thread::sleep_for(std::chrono::milliseconds{1});
-        }
-        should_sleep = false;
-        std::lock_guard<std::mutex> lock(CAN_driver::m_read); // Yay for RAII
-
+    while (CAN_driver::should_run){
         ssize_t num_bytes = recv(sock, buffer, BUFFER_SIZE, MSG_DONTWAIT);
+
         if (num_bytes < 0)
         {
-            should_sleep = true;
-            continue;
+            if (errno == EAGAIN || errno == EWOULDBLOCK){
+                // there was nothing to read (recv MSG_DONTWAIT flag docs)
+                std::this_thread::sleep_for(std::chrono::milliseconds{1});
+                continue;
+            } else {
+                RCLCPP_FATAL(rclcpp::get_logger("my_logger"), "CAN_driver::read: recv failed due to: %s\r\n", std::strerror(errno));
+                exit(EXIT_FAILURE);
+            }
         }
 
         buffer[num_bytes] = '\0'; // Null-terminate the received data
         struct canfd_frame frame;
 
         frame = *((struct canfd_frame *)buffer);
-        handle_frame(frame);
 
+        // We don't need to lock the recv invocation
+        std::lock_guard<std::mutex> lock(CAN_driver::m); // Yay for RAII
+        handle_frame(frame);
+      
         CAN_vars::update_joint_status();
     }
     return 0;
