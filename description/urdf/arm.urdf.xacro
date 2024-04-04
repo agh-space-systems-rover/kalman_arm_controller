@@ -12,7 +12,7 @@
 
     <xacro:arm_description />
 
-    <xacro:include filename="$(find kalman_arm_controller)/urdf/gripper.urdf.xacro" />
+    <!-- <xacro:include filename="$(find kalman_arm_controller)/urdf/gripper.urdf.xacro" /> -->
 
     <xacro:include filename="$(find kalman_arm_controller)/ros2_control/arm.ros2_control.xacro" />
     <xacro:arm_ros2_control name="kalman_arm" />

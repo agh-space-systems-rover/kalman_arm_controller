@@ -116,6 +116,10 @@ install(
   DESTINATION share/kalman_arm_controller
 )
 install(
+  DIRECTORY meshes
+  DESTINATION share/kalman_arm_controller
+)
+install(
   DIRECTORY bringup/launch bringup/config
   DESTINATION share/kalman_arm_controller
 )

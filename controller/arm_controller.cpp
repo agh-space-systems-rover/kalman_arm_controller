@@ -91,6 +91,7 @@ namespace kalman_arm_controller
             new_msg_ = true;
         };
 
+        // TODO: parametrize topic name
         joint_command_subscriber_ =
             get_node()->create_subscription<trajectory_msgs::msg::JointTrajectory>(
                 "~/joint_trajectory", rclcpp::SystemDefaultsQoS(), callback);
