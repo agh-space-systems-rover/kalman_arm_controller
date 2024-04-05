@@ -31,7 +31,7 @@ def generate_launch_description():
                 [
                     FindPackageShare("kalman_arm_controller"),
                     "urdf",
-                    "r6bot.urdf.xacro",
+                    "arm.urdf.xacro",
                 ]
             ),
         ]
@@ -46,7 +46,7 @@ def generate_launch_description():
         ]
     )
     rviz_config_file = PathJoinSubstitution(
-        [FindPackageShare("ros2_control_demo_description"), "r6bot/rviz", "view_robot.rviz"]
+        [FindPackageShare("kalman_arm_controller"), "config", "arm.rviz"]
     )
 
     control_node = Node(
@@ -59,6 +59,11 @@ def generate_launch_description():
                 "/position_commands",
             ),
         ],
+        arguments=[
+            "--ros-args",
+            "--log-level",
+            "debug",
+        ],
         output="both",
     )
     robot_state_pub_node = Node(
@@ -66,6 +71,11 @@ def generate_launch_description():
         executable="robot_state_publisher",
         output="both",
         parameters=[robot_description],
+        # arguments=[
+        #     "--ros-args",
+        #     "--log-level",
+        #     "debug",
+        # ],
     )
     rviz_node = Node(
         package="rviz2",
@@ -78,13 +88,24 @@ def generate_launch_description():
     joint_state_broadcaster_spawner = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=["joint_state_broadcaster", "--controller-manager", "/controller_manager"],
+        arguments=[
+            "joint_state_broadcaster",
+            "--controller-manager",
+            "/controller_manager",
+        ],
     )
 
     robot_controller_spawner = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=["r6bot_controller", "-c", "/controller_manager"],
+        arguments=[
+            "arm_controller",
+            "-c",
+            "/controller_manager",
+            "--ros-args",
+            "--log-level",
+            "debug",
+        ],
     )
 
     # Delay rviz start after `joint_state_broadcaster`
@@ -96,10 +117,12 @@ def generate_launch_description():
     )
 
     # Delay start of robot_controller after `joint_state_broadcaster`
-    delay_robot_controller_spawner_after_joint_state_broadcaster_spawner = RegisterEventHandler(
-        event_handler=OnProcessExit(
-            target_action=joint_state_broadcaster_spawner,
-            on_exit=[robot_controller_spawner],
+    delay_robot_controller_spawner_after_joint_state_broadcaster_spawner = (
+        RegisterEventHandler(
+            event_handler=OnProcessExit(
+                target_action=joint_state_broadcaster_spawner,
+                on_exit=[robot_controller_spawner],
+            )
         )
     )
 
@@ -107,7 +130,7 @@ def generate_launch_description():
         control_node,
         robot_state_pub_node,
         joint_state_broadcaster_spawner,
-        # delay_rviz_after_joint_state_broadcaster_spawner,
+        delay_rviz_after_joint_state_broadcaster_spawner,
         delay_robot_controller_spawner_after_joint_state_broadcaster_spawner,
     ]
 

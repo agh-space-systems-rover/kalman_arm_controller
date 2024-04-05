@@ -25,7 +25,7 @@ namespace kalman_arm_controller
             }
         }
 
-        CAN_driver::init();
+        // CAN_driver::init();
 
         return CallbackReturn::SUCCESS;
     }
@@ -70,12 +70,24 @@ namespace kalman_arm_controller
 
     return_type ArmSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Duration &period)
     {
-        return read_joint_states();
+        for (auto i = 0ul; i < joint_velocities_command_.size(); i++)
+        {
+            joint_velocities_[i] = joint_velocities_command_[i];
+            joint_position_[i] += joint_velocities_command_[i] * period.seconds();
+        }
+
+        for (auto i = 0ul; i < joint_position_command_.size(); i++)
+        {
+            joint_position_[i] = joint_position_command_[i];
+        }
+        return return_type::OK;
+        // return read_joint_states();
     }
 
     return_type ArmSystem::write(const rclcpp::Time &, const rclcpp::Duration &)
     {
-        return write_joint_commands();
+        return return_type::OK;
+        // return write_joint_commands();
     }
 
     return_type ArmSystem::read_joint_states()

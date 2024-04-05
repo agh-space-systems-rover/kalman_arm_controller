@@ -28,7 +28,7 @@ def generate_launch_description():
                 [
                     FindPackageShare("kalman_arm_controller"),
                     "urdf",
-                    "r6bot.urdf.xacro",
+                    "arm.urdf.xacro",
                 ]
             ),
         ]
@@ -40,6 +40,7 @@ def generate_launch_description():
         executable="send_trajectory",
         name="send_trajectory_node",
         parameters=[robot_description],
+        arguments=["--ros-args", "--log-level", "debug"],
     )
 
     nodes_to_start = [send_trajectory_node]
