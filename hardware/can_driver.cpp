@@ -73,16 +73,20 @@ int CAN_driver::init()
 int CAN_driver::read()
 {
     char buffer[BUFFER_SIZE];
-    while (CAN_driver::should_run){
+    while (CAN_driver::should_run)
+    {
         ssize_t num_bytes = recv(sock, buffer, BUFFER_SIZE, MSG_DONTWAIT);
 
         if (num_bytes < 0)
         {
-            if (errno == EAGAIN || errno == EWOULDBLOCK){
+            if (errno == EAGAIN || errno == EWOULDBLOCK)
+            {
                 // there was nothing to read (recv MSG_DONTWAIT flag docs)
                 std::this_thread::sleep_for(std::chrono::milliseconds{1});
                 continue;
-            } else {
+            }
+            else
+            {
                 RCLCPP_FATAL(rclcpp::get_logger("my_logger"), "CAN_driver::read: recv failed due to: %s\r\n", std::strerror(errno));
                 exit(EXIT_FAILURE);
             }
@@ -94,9 +98,9 @@ int CAN_driver::read()
         frame = *((struct canfd_frame *)buffer);
 
         // We don't need to lock the recv invocation
-        std::lock_guard<std::mutex> lock(CAN_driver::m); // Yay for RAII
+        std::lock_guard<std::mutex> lock(CAN_driver::m_read); // Yay for RAII
         handle_frame(frame);
-      
+
         CAN_vars::update_joint_status();
     }
     return 0;
