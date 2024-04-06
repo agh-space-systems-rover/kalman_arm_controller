@@ -5,29 +5,6 @@
 #include <thread>
 #include <chrono>
 
-int write_data(uint16_t can_id, uint8_t *data, uint8_t len)
-{
-    struct canfd_frame frame;
-    frame.can_id = can_id;
-    frame.flags = 0;
-    frame.len = len;
-    memcpy(frame.data, data, len);
-    printf("Writing frame with ID %03X and length %d\r\n\tData: {", frame.can_id, frame.len);
-    // print data
-    for (int i = 0; i < len; i++)
-    {
-        printf("%02X ", frame.data[i]);
-    }
-    printf("}\r\n");
-
-    if (::write(CAN_driver::sock, &frame, sizeof(frame)) < 0)
-    {
-        perror("Write");
-        return 1;
-    }
-    return 0;
-}
-
 int main()
 {
     printf("Testing can_driver.cpp\r\n");
@@ -67,7 +44,14 @@ int main()
     {
 
         setpoint_cnt++;
-        CAN_vars::joints[3].moveSetpoint.position_deg = (float)setpoint_cnt * 3.6f;
+        for (int i = 0; i < 4; i++)
+        {
+            CAN_vars::joints[i].moveSetpoint.position_deg = (float)setpoint_cnt * 0.36f;
+        }
+        for (int i = 4; i < 6; i++)
+        {
+            CAN_vars::joints[i].moveSetpointDiff.position_deg = (float)setpoint_cnt * 0.36f;
+        }
         printf("Writing CAN data\r\n");
         try
         {

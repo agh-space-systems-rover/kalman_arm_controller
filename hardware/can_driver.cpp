@@ -140,7 +140,7 @@ int CAN_driver::write()
     CAN_vars::update_joint_setpoint();
 
     // Write data from global joints
-    for (int i = 3; i < 4; i++)
+    for (int i = 0; i < 6; i++)
     {
         write_joint_setpoint(i);
 
