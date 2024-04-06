@@ -31,7 +31,6 @@ typedef struct
  */
 typedef struct
 {
-    float torque_Nm;
     float velocity_deg_s;
     float position_deg;
 } jointMoveStatus_t;
@@ -58,6 +57,11 @@ typedef struct __attribute__((__packed__))
      * @brief Structure representing the status of a joint motor received from CAN.
      */
     jointMotorStatus_t status;
+
+    /**
+     * @brief Structure representing the fast status (only pos and vel) of a joint motor received from CAN.
+     */
+    jointMotorFastStatus_t fastStatus;
 
     /**
      * @brief Structure representing the setpoint of a joint motor to send via CAN.

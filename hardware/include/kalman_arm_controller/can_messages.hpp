@@ -73,7 +73,7 @@ typedef struct __attribute__((__packed__))
     int8_t controllerTemerature_1deg;
 
     int16_t torque;
-    int16_t velocity; // RPM*100 dla direction != -1, RPM*10 dla direction == -1
+    int16_t velocity; // RPM*10
     int32_t position; // pozycja 0-36000 (co 0.01 deg)
 
     uint8_t inputVoltage_0V2;
@@ -82,6 +82,20 @@ typedef struct __attribute__((__packed__))
 } jointMotorStatus_t;
 #define CMD_JOINT_STATUS 0x030
 #define LEN_JOINT_STATUS 16
+
+/**
+ * @brief Structure representing the fast status (only vel and pos).
+ *
+ * @param velocity int16_t Velocity - bytes 0-1
+ * @param position int32_t Position - bytes 2-5
+ */
+typedef struct __attribute__((__packed__))
+{
+    int16_t velocity; // RPM*10
+    int32_t position; // pozycja 0-36000 (co 0.01 deg)
+} jointMotorFastStatus_t;
+#define CMD_JOINT_FAST_STATUS 0x036
+#define LEN_JOINT_FAST_STATUS 6
 
 /*********SENDING MESSAGES************/
 

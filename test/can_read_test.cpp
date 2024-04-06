@@ -31,7 +31,7 @@ int main()
         printf("Active joints status:\r\n");
         for (int i = 0; i < 6; i++)
         {
-            printf("Joint %d:\r\n\tVelocity: %d\r\n\tPosition: %d\r\n", i, CAN_vars::joints[i].status.velocity, CAN_vars::joints[i].status.position);
+            printf("Joint %d:\r\n\tVelocity: %d\r\n\tPosition: %d\r\n", i, CAN_vars::joints[i].fastStatus.velocity, CAN_vars::joints[i].fastStatus.position);
         }
         printf("\r\n");
 

@@ -4,7 +4,7 @@ namespace CAN_vars
 {
     jointStatus_t joints[6] = {};
 
-    armConfig_t arm_config = {0};
+    armConfig_t arm_config = {};
 }
 
 /**
@@ -58,11 +58,10 @@ void CAN_vars::update_single_joint_status(uint8_t joint_id)
 void CAN_vars::calculate_status(uint8_t joint_id)
 {
     jointConfig_t *config = &CAN_vars::arm_config.joint[joint_id + 1];
-    jointMotorStatus_t *jointStatus = &CAN_vars::joints[joint_id].status;
+    jointMotorFastStatus_t *jointStatus = &CAN_vars::joints[joint_id].fastStatus;
     float gearRatio = config->gearRatio;
     int direction = config->invertDirection ? -1 : 1;
 
-    joints[joint_id].moveStatus.torque_Nm = 0.001f * gearRatio * jointStatus->torque * direction;
     joints[joint_id].moveStatus.velocity_deg_s = (360.0f / (10 * 60)) * gearRatio * jointStatus->velocity * direction;
     joints[joint_id].moveStatus.position_deg = 0.01f * gearRatio * jointStatus->position * direction;
 }
@@ -77,9 +76,9 @@ void CAN_vars::calculate_status_diff(uint8_t joint_id, uint8_t diff_id)
 {
     uint8_t difNbr[2];
     jointConfig_t *difConfig[2];
-    jointMotorStatus_t *difStatus[2];
+    jointMotorFastStatus_t *difStatus[2];
 
-    float gearRatio[2], torque[2], velocity[2], position[2];
+    float gearRatio[2], velocity[2], position[2];
 
     if (diff_id > joint_id + 1)
     {
@@ -95,22 +94,19 @@ void CAN_vars::calculate_status_diff(uint8_t joint_id, uint8_t diff_id)
     difConfig[0] = &CAN_vars::arm_config.joint[difNbr[0]];
     difConfig[1] = &CAN_vars::arm_config.joint[difNbr[1]];
 
-    difStatus[0] = &CAN_vars::joints[difNbr[0]].status;
-    difStatus[1] = &CAN_vars::joints[difNbr[1]].status;
+    difStatus[0] = &CAN_vars::joints[difNbr[0]].fastStatus;
+    difStatus[1] = &CAN_vars::joints[difNbr[1]].fastStatus;
 
     for (uint8_t i = 0; i < 2; i++)
     {
         gearRatio[i] = difConfig[i]->gearRatio;
-        torque[i] = 0.001f * gearRatio[i] * difStatus[i]->torque;
         velocity[i] = (360.0f / (10 * 60)) * gearRatio[i] * difStatus[i]->velocity;
         position[i] = 0.01f * gearRatio[i] * difStatus[i]->position;
     }
 
-    joints[difNbr[0] - 1].moveStatus.torque_Nm = (torque[0] - torque[1]) / 2;
     joints[difNbr[0] - 1].moveStatus.velocity_deg_s = (velocity[0] - velocity[1]) / 2;
     joints[difNbr[0] - 1].moveStatus.position_deg = (position[0] - position[1]) / 2;
 
-    joints[difNbr[1] - 1].moveStatus.torque_Nm = (torque[0] + torque[1]) / 2;
     joints[difNbr[1] - 1].moveStatus.velocity_deg_s = (velocity[0] + velocity[1]) / 2;
     joints[difNbr[1] - 1].moveStatus.position_deg = (position[0] + position[1]) / 2;
 }

@@ -68,7 +68,7 @@ namespace arm_config
         CAN_vars::arm_config.joint[4].maxTorque_Nm = 61;
         CAN_vars::arm_config.joint[4].minPosition_deg = -360;
         CAN_vars::arm_config.joint[4].maxPosition_deg = 360;
-        CAN_vars::arm_config.joint[4].gearRatio = 0.01;
+        CAN_vars::arm_config.joint[4].gearRatio = 1; // FIXME: 0.01
         CAN_vars::arm_config.joint[4].invertDirection = 0;
         CAN_vars::arm_config.joint[4].requirePositioning = 0; // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         CAN_vars::arm_config.joint[4].positioningVelocity = -15;
