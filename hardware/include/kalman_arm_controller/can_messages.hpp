@@ -90,41 +90,27 @@ typedef struct __attribute__((__packed__))
  *
  * This structure is used to send the setpoint to the joint motor through the CAN bus.
  *
- * @param torque_mNm uint16_t Torque in millinewton meters - bytes 0-1
- * @param acceleration_0RPMs_1 uint16_t Acceleration in 0.1 RPM/s units - bytes 2-3
- * @param velocity_0RPM_1 int16_t Velocity in 0.1 RPM units - bytes 4-5
- * @param position_0deg01 int32_t Position in 0.01 degrees units - bytes 6-9
- * @param lastSetpointTime uint8_t Last setpoint time - byte 10
- * @param reserved uint8_t Reserved byte - byte 11
+ * @param position_0deg01 int32_t Position in 0.01 degrees units - bytes 0-3
  */
 typedef struct __attribute__((__packed__))
 {
-    uint16_t torque_mNm;
-    uint16_t acceleration_0RPMs_1;
-    int16_t velocity_0RPM_1;
     int32_t position_0deg01;
-    uint8_t lastSetpointTime;
-    uint8_t reserved;
 } jointCmdSetpoint_t;
 #define CMD_SETPOINT 0x026
-#define LEN_CMD_SETPOINT 12
+#define LEN_CMD_SETPOINT 4
 
 /**
  * @brief Structure representing the velocity to be sent to a joint motor through the CAN bus.
  *
  * This structure is used to send the velocity to the joint motor through the CAN bus.
  *
- * @param torque_mNm uint16_t Torque in millinewton meters - bytes 0-1
- * @param acceleration_0RPMs_1 uint16_t Acceleration in 0.1 RPM/s units - bytes 2-3
- * @param velocity_0RPM_1 int16_t Velocity in 0.1 RPM units - bytes 4-5
+ * @param velocity_0RPM_1 int16_t Velocity in 0.1 RPM units - bytes 0-1
  */
 typedef struct __attribute__((__packed__))
 {
-    uint16_t torque_mNm;
-    uint16_t acceleration_0RPMs_1;
     int16_t velocity_0RPM_1;
 } jointCmdVelocity_t;
 #define CMD_VELOCITY 0x025
-#define LEN_CMD_VELOCITY 6
+#define LEN_CMD_VELOCITY 2
 
 #endif // KALMAN_ARM_CONTROLLER__HARDWARE__CAN_MESSAGES_HPP

@@ -140,7 +140,7 @@ int CAN_driver::write()
     CAN_vars::update_joint_setpoint();
 
     // Write data from global joints
-    for (int i = 0; i < 6; i++)
+    for (int i = 3; i < 4; i++)
     {
         write_joint_setpoint(i);
 
@@ -168,6 +168,7 @@ int CAN_driver::write_data(uint16_t can_id, uint8_t *data, uint8_t len)
     struct canfd_frame frame;
     frame.can_id = can_id;
     frame.len = len;
+    frame.flags = 0;
     memcpy(frame.data, data, len);
     printf("Writing frame with ID %03X and length %d\r\n\tData: {", frame.can_id, frame.len);
     // print data

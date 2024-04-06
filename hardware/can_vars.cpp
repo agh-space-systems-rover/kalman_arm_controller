@@ -129,20 +129,6 @@ void CAN_vars::update_single_joint_setpoint(uint8_t joint_id)
     direction = arm_config.joint[joint_id + 1].invertDirection ? -1 : 1;
     gearRatio = arm_config.joint[joint_id + 1].gearRatio;
 
-    temp = ABS_F(joints[joint_id].moveSetpoint.torque_Nm) * 1000.0f * gearRatio;
-    data.torque_mNm = (temp >= UINT16_MAX) ? UINT16_MAX : temp;
-
-    temp = (((10.0f * 60) / 360.0f) / gearRatio) * ABS_F(joints[joint_id].moveSetpoint.acceleration_deg_ss);
-    data.acceleration_0RPMs_1 = (temp >= UINT16_MAX) ? UINT16_MAX : temp;
-
-    temp = (((10.0f * 60) / 360.0f) / gearRatio) * joints[joint_id].moveSetpoint.velocity_deg_s * direction;
-    if (temp >= INT16_MAX)
-        data.velocity_0RPM_1 = INT16_MAX;
-    else if (temp <= INT16_MIN)
-        data.velocity_0RPM_1 = INT16_MIN;
-    else
-        data.velocity_0RPM_1 = temp;
-
     temp = (100.0f / gearRatio) * joints[joint_id].moveSetpoint.position_deg * direction;
     if (temp >= INT32_MAX)
         data.position_0deg01 = INT32_MAX;
