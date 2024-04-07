@@ -45,7 +45,7 @@ int CAN_driver::init()
     setsockopt(sock, SOL_CAN_RAW, CAN_RAW_FD_FRAMES, &enable_fd_frames, sizeof(enable_fd_frames));
 
     // Set up the can interface
-    strcpy(ifr.ifr_name, "can1");
+    strcpy(ifr.ifr_name, "can0");
     ioctl(sock, SIOCGIFINDEX, &ifr);
 
     addr.can_family = AF_CAN;
@@ -170,13 +170,13 @@ int CAN_driver::write_data(uint16_t can_id, uint8_t *data, uint8_t len)
     frame.len = len;
     frame.flags = 0;
     memcpy(frame.data, data, len);
-    printf("Writing frame with ID %03X and length %d\r\n\tData: {", frame.can_id, frame.len);
+    // printf("Writing frame with ID %03X and length %d\r\n\tData: {", frame.can_id, frame.len);
     // print data
     for (int i = 0; i < len; i++)
     {
-        printf("%02X ", frame.data[i]);
+        // printf("%02X ", frame.data[i]);
     }
-    printf("}\r\n");
+    // printf("}\r\n");
 
     if (::write(sock, &frame, sizeof(frame)) < 0)
     {

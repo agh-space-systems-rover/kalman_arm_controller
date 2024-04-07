@@ -28,7 +28,7 @@ def generate_launch_description():
                 [
                     FindPackageShare("kalman_arm_controller"),
                     "urdf",
-                    "r6bot.urdf.xacro",
+                    "arm.urdf.xacro",
                 ]
             ),
         ]

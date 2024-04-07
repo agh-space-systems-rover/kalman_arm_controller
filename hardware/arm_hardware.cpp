@@ -1,5 +1,6 @@
 #include "kalman_arm_controller/arm_hardware.hpp"
 #include "rclcpp/rclcpp.hpp"
+#include <math.h>
 // #include "arm_hardware.hpp"
 
 namespace kalman_arm_controller
@@ -82,43 +83,43 @@ namespace kalman_arm_controller
     {
         // CAN_driver::read();
         std::lock_guard<std::mutex> lock(CAN_driver::m_read);
-        RCLCPP_INFO(rclcpp::get_logger("my_logger"), "position: %ld", CAN_vars::joints[0].status.position);
+        // RCLCPP_INFO(rclcpp::get_logger("my_logger"), "position: %ld", CAN_vars::joints[0].status.position);
 
         for (int i = 0; i < 6; i++)
         {
-            joint_position_[i] = CAN_vars::joints[i].moveStatus.position_deg;
-            joint_velocities_[i] = CAN_vars::joints[i].moveStatus.velocity_deg_s;
+            joint_position_[i] = CAN_vars::joints[i].moveStatus.position_deg * M_PI / 180.0f;
+            joint_velocities_[i] = CAN_vars::joints[i].moveStatus.velocity_deg_s * M_PI / 180.0f;
         }
         return return_type::OK;
     }
 
     return_type ArmSystem::write_joint_commands()
     {
-        {
-            std::lock_guard<std::mutex> lock(CAN_driver::m_write);
-            for (int i = 0; i < 4; i++)
-            {
-                CAN_vars::joints[i].moveSetpoint.position_deg = joint_position_command_[i];
-                CAN_vars::joints[i].moveSetpoint.velocity_deg_s = joint_velocities_command_[i];
-                CAN_vars::joints[i].moveSetpoint.torque_Nm = 0x02fa;
-                CAN_vars::joints[i].moveSetpoint.acceleration_deg_ss = 0xffff;
-            }
-            for (int i = 4; i < 6; i++)
-            {
-                CAN_vars::joints[i].moveSetpointDiff.position_deg = joint_position_command_[i];
-                CAN_vars::joints[i].moveSetpointDiff.velocity_deg_s = joint_velocities_command_[i];
-                CAN_vars::joints[i].moveSetpointDiff.torque_Nm = 0x02fa;
-                CAN_vars::joints[i].moveSetpointDiff.acceleration_deg_ss = 0xffff;
-            }
-        }
 
         // Do not write if previous write is still in progress
         if (writer.valid() && writer.wait_for(std::chrono::seconds(0)) != std::future_status::ready)
         {
-            RCLCPP_WARN(rclcpp::get_logger("my_logger"), "Previous write still in progress");
+            // RCLCPP_WARN(rclcpp::get_logger("my_logger"), "Previous write still in progress");
         }
         else
         {
+            {
+                std::lock_guard<std::mutex> lock(CAN_driver::m_write);
+                for (int i = 0; i < 4; i++)
+                {
+                    CAN_vars::joints[i].moveSetpoint.position_deg = joint_position_command_[i] * 180.0f / M_PI;
+                    CAN_vars::joints[i].moveSetpoint.velocity_deg_s = joint_velocities_command_[i] * 180.0f / M_PI;
+                    CAN_vars::joints[i].moveSetpoint.torque_Nm = 0x02fa;
+                    CAN_vars::joints[i].moveSetpoint.acceleration_deg_ss = 0xffff;
+                }
+                for (int i = 4; i < 6; i++)
+                {
+                    CAN_vars::joints[i].moveSetpointDiff.position_deg = joint_position_command_[i] * 180.0f / M_PI;
+                    CAN_vars::joints[i].moveSetpointDiff.velocity_deg_s = joint_velocities_command_[i] * 180.0f / M_PI;
+                    CAN_vars::joints[i].moveSetpointDiff.torque_Nm = 0x02fa;
+                    CAN_vars::joints[i].moveSetpointDiff.acceleration_deg_ss = 0xffff;
+                }
+            }
             // Run write in a separate thread
             writer = std::async(std::launch::async, [&]
                                 { CAN_driver::write(); });
