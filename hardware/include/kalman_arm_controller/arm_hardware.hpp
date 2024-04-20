@@ -42,6 +42,8 @@ namespace kalman_arm_controller
 
         std::future<void> writer;
 
+        ControlType current_control_type = ControlType::posvel;
+
         std::unordered_map<std::string, std::vector<std::string>> joint_interfaces = {
             {"position", {}}, {"velocity", {}}};
 

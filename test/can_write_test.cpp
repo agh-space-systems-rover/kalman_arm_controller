@@ -53,17 +53,17 @@ int main()
             CAN_vars::joints[i].moveSetpointDiff.position_deg = (float)setpoint_cnt * 0.36f;
         }
         printf("Writing CAN data\r\n");
-        try
-        {
-            if (CAN_driver::write())
-                break;
-        }
-        catch (const std::exception &e)
-        {
-            printf("Caught exception: %s\r\n", e.what());
-            CAN_driver::close();
-            return 1;
-        }
+        // try
+        // {
+        //     if (CAN_driver::write())
+        //         break;
+        // }
+        // catch (const std::exception &e)
+        // {
+        //     printf("Caught exception: %s\r\n", e.what());
+        //     CAN_driver::close();
+        //     return 1;
+        // }
         printf("Written!\r\n\r\n");
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
 

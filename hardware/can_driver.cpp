@@ -45,7 +45,7 @@ int CAN_driver::init()
     setsockopt(sock, SOL_CAN_RAW, CAN_RAW_FD_FRAMES, &enable_fd_frames, sizeof(enable_fd_frames));
 
     // Set up the can interface
-    strcpy(ifr.ifr_name, "can0");
+    strcpy(ifr.ifr_name, "can1");
     ioctl(sock, SIOCGIFINDEX, &ifr);
 
     addr.can_family = AF_CAN;
@@ -133,21 +133,51 @@ int CAN_driver::handle_frame(canfd_frame frame)
     return 0;
 }
 
-int CAN_driver::write()
+int CAN_driver::write(ControlType controlType)
 {
     std::lock_guard<std::mutex> lock(CAN_driver::m_write);
 
     CAN_vars::update_joint_setpoint();
+    write_control_type(controlType);
+    std::this_thread::sleep_for(std::chrono::microseconds(1000));
 
     // Write data from global joints
     for (int i = 0; i < 6; i++)
     {
-        write_joint_setpoint(i);
+        switch (controlType)
+        {
+        case ControlType::position:
+            // printf("position\r\n");
+            write_joint_setpoint(i);
+            break;
 
+        case ControlType::posvel:
+            // printf("posvel\r\n");
+            write_joint_posvel(i);
+            break;
+        }
         std::this_thread::sleep_for(std::chrono::microseconds(1000));
     }
 
     return 0;
+}
+
+int CAN_driver::write_control_type(ControlType controlType)
+{
+    jointCmdControlType_t data;
+    switch (controlType)
+    {
+    case ControlType::position:
+        data.controlMode = controlMode_t::CONTROL_MODE_POSITION;
+        break;
+
+    case ControlType::posvel:
+        data.controlMode = controlMode_t::CONTROL_MODE_LEGACY;
+        break;
+    }
+
+    uint16_t can_id = CMD_CONTROL_TYPE;
+    return write_data(can_id, (uint8_t *)&data, LEN_CMD_CONTROL_TYPE);
 }
 
 int CAN_driver::write_joint_setpoint(uint8_t joint_id)
@@ -159,6 +189,18 @@ int CAN_driver::write_joint_setpoint(uint8_t joint_id)
     if (1 <= joint_id && joint_id <= 6)
     {
         return write_data(can_id, (uint8_t *)&CAN_vars::joints[joint_id - 1].setpoint, sizeof(jointCmdSetpoint_t));
+    }
+    return 1;
+}
+
+int CAN_driver::write_joint_posvel(uint8_t joint_id)
+{
+    joint_id += 1;
+
+    uint16_t can_id = (joint_id << 7) + CMD_VELOCITY;
+    if (1 <= joint_id && joint_id <= 6)
+    {
+        return write_data(can_id, (uint8_t *)&CAN_vars::joints[joint_id - 1].velSetpoint, sizeof(jointCmdVelocity_t));
     }
     return 1;
 }

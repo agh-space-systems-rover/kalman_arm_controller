@@ -104,6 +104,23 @@ namespace kalman_arm_controller
         else
         {
             {
+
+                // for (int i = 0; i < 6; i++)
+                //     {
+                //         printf("COMMANDS POS FOR JOINT %d: \t last: %f\t setpoint%f\r\n", i, CAN_vars::joints[i].moveSetpoint.position_deg, joint_position_command_[i] * 180.0f / M_PI);
+                //         printf("COMMANDS POSVEL FOR JOINT %d: \t last: %f\t setpoint%f\r\n", i, CAN_vars::joints[i].moveSetpoint.velocity_deg_s, joint_velocities_command_[i] * 180.0f / M_PI);
+                //     }
+                for (int i = 0; i<6; i++){
+                    if(CAN_vars::joints[i].moveSetpoint.position_deg != joint_position_command_[i] * 180.0f / M_PI){
+                        // printf("COMMANDS POS FOR JOINT %d: \t last: %f\t setpoint%f\r\n", i, CAN_vars::joints[i].moveSetpoint.position_deg, joint_position_command_[i] * 180.0f / M_PI);
+                        // current_control_type = ControlType::position;
+                    }
+                    if(CAN_vars::joints[i].moveSetpoint.velocity_deg_s != joint_velocities_command_[i] * 180.0f / M_PI){
+                        // printf("COMMANDS POSVEL FOR JOINT %d: \t last: %f\t setpoint%f\r\n", i, CAN_vars::joints[i].moveSetpoint.velocity_deg_s, joint_velocities_command_[i] * 180.0f / M_PI);
+                        current_control_type = ControlType::posvel;
+                    }
+                }
+
                 std::lock_guard<std::mutex> lock(CAN_driver::m_write);
                 for (int i = 0; i < 4; i++)
                 {
@@ -122,9 +139,10 @@ namespace kalman_arm_controller
             }
             // Run write in a separate thread
             writer = std::async(std::launch::async, [&]
-                                { CAN_driver::write(); });
+                                { CAN_driver::write(current_control_type); });
         }
 
+        
         return return_type::OK;
     }
 

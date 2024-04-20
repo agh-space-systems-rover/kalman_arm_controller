@@ -36,14 +36,14 @@ def load_yaml(package_name, file_path):
 
 def generate_launch_description():
     moveit_config = (
-        MoveItConfigsBuilder("moveit_resources_kalman")
-        .robot_description(file_path=PathJoinSubstitution(
-                [
-                    FindPackageShare("kalman_arm_controller"),
-                    "urdf",
-                    "arm.urdf.xacro",
-                ]
-            ))
+        MoveItConfigsBuilder("kalman_arm")
+        # .robot_description(file_path=PathJoinSubstitution(
+        #         [
+        #             FindPackageShare("kalman_arm_controller"),
+        #             "urdf",
+        #             "arm.urdf.xacro",
+        #         ]
+        #     ))
         .to_moveit_configs()
     )
 
@@ -146,7 +146,7 @@ def generate_launch_description():
     # As opposed to a node component, this may be necessary (for example) if Servo is running on a different PC
     servo_node = Node(
         package="moveit_servo",
-        executable="servo_node_main",
+        executable="servo_node",
         parameters=[
             servo_params,
             moveit_config.robot_description,
@@ -154,6 +154,7 @@ def generate_launch_description():
             moveit_config.robot_description_kinematics,
         ],
         output="screen",
+        # arguments = ['--ros-args', '--log-level', 'DEBUG', '--log-level','rcl:=INFO'],
     )
 
     return LaunchDescription(

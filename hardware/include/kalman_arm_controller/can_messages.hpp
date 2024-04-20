@@ -17,6 +17,13 @@ typedef enum
     POSITIONING_ENUM_SIZE    ///< Size of the positioning status enum
 } positioningStatus_t;
 
+typedef enum
+{
+	CONTROL_MODE_SPEED = 0,
+	CONTROL_MODE_POSITION = 1,
+	CONTROL_MODE_LEGACY = 2,
+} controlMode_t;
+
 /**
  * @brief Structure representing the status of a joint motor received from the CAN bus.
  *
@@ -126,5 +133,19 @@ typedef struct __attribute__((__packed__))
 } jointCmdVelocity_t;
 #define CMD_VELOCITY 0x025
 #define LEN_CMD_VELOCITY 2
+
+//#define CMD_PMSM_CONTROL_MODE 0x035
+// BaseType_t canFunControlMode(uint8_t *data, uint8_t len);
+// typedef struct __attribute__((__packed__))
+// {
+// 	controlMode_t mode;
+// } cmdControlMode_t;
+
+typedef struct __attribute__((__packed__))
+{
+    controlMode_t controlMode;
+} jointCmdControlType_t;
+#define CMD_CONTROL_TYPE 0x035
+#define LEN_CMD_CONTROL_TYPE 1
 
 #endif // KALMAN_ARM_CONTROLLER__HARDWARE__CAN_MESSAGES_HPP

@@ -68,6 +68,8 @@ typedef struct __attribute__((__packed__))
      */
     jointCmdSetpoint_t setpoint;
 
+    jointCmdVelocity_t velSetpoint;
+
     /**
      * @brief Structure representing the received status of a joint motor already calculated to normal, humanreadable
      * and supported by moveit format.
@@ -132,5 +134,11 @@ typedef struct
     uint16_t canRoverStatusSendPeriod_ms;
 
 } armConfig_t;
+
+enum ControlType
+{
+    position,
+    posvel
+};
 
 #endif // KALMAN_ARM_CONTROLLER__HARDWARE__CAN_TYPES_HPP_

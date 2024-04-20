@@ -25,6 +25,39 @@ set(CONTROLLER_INCLUDE_DEPENDS
   trajectory_msgs
   rclcpp
 )
+set(THIS_PACKAGE_INCLUDE_DEPENDS
+    control_msgs
+    geometry_msgs
+    moveit_core
+    moveit_msgs
+    moveit_ros_planning
+    moveit_ros_planning_interface
+    pluginlib
+    rclcpp
+    rclcpp_components
+    realtime_tools
+    sensor_msgs
+    std_msgs
+    std_srvs
+    tf2_eigen
+    trajectory_msgs)
+
+set(TWIST_REPUB_DEPS
+    control_msgs
+    geometry_msgs
+    moveit_core
+    moveit_msgs
+    moveit_ros_planning
+    moveit_ros_planning_interface
+    pluginlib
+    rclcpp
+    rclcpp_components
+    realtime_tools
+    sensor_msgs
+    std_msgs
+    std_srvs
+    tf2_eigen
+    builtin_interfaces)
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
@@ -37,10 +70,25 @@ endforeach()
 foreach(Dependency IN ITEMS ${CONTROLLER_INCLUDE_DEPENDS})
   find_package(${Dependency} REQUIRED)
 endforeach()
+foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
+  find_package(${Dependency} REQUIRED)
+endforeach()
+foreach(Dependency IN ITEMS ${TWIST_REPUB_DEPS})
+  find_package(${Dependency} REQUIRED)
+endforeach()
 
 
 ## COMPILE
 add_executable(send_trajectory reference_generator/send_trajectory.cpp)
+
+add_executable(servo_keyboard_input reference_generator/servo_keyboard_input.cpp)
+target_include_directories(servo_keyboard_input PUBLIC include)
+ament_target_dependencies(servo_keyboard_input ${THIS_PACKAGE_INCLUDE_DEPENDS})
+
+
+add_executable(twist_republisher reference_generator/twist_republisher.cpp)
+target_include_directories(twist_republisher PUBLIC include)
+ament_target_dependencies(twist_republisher ${TWIST_REPUB_DEPS})
 
 add_executable(can_read_test
   test/can_read_test.cpp
@@ -136,6 +184,12 @@ install(TARGETS can_write_test
   DESTINATION lib/${PROJECT_NAME}
 )
 
+install(TARGETS servo_keyboard_input
+    DESTINATION lib/${PROJECT_NAME})
+
+install(TARGETS twist_republisher
+    DESTINATION lib/${PROJECT_NAME})
+
 install(TARGETS kalman_arm_controller
   EXPORT export_kalman_arm_controller
   ARCHIVE DESTINATION lib
@@ -164,5 +218,5 @@ endif()
 
 ## EXPORTS
 ament_export_targets(export_kalman_arm_controller HAS_LIBRARY_TARGET)
-ament_export_dependencies(${HW_IF_INCLUDE_DEPENDS} ${REF_GEN_INCLUDE_DEPENDS} ${CONTROLLER_INCLUDE_DEPENDS})
+ament_export_dependencies(${HW_IF_INCLUDE_DEPENDS} ${REF_GEN_INCLUDE_DEPENDS} ${CONTROLLER_INCLUDE_DEPENDS} ${THIS_PACKAGE_INCLUDE_DEPENDS})
 ament_package()

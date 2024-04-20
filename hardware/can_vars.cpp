@@ -1,5 +1,7 @@
 #include "kalman_arm_controller/can_vars.hpp"
 
+#include <stdio.h>
+
 namespace CAN_vars
 {
     jointStatus_t joints[6] = {};
@@ -133,7 +135,22 @@ void CAN_vars::update_single_joint_setpoint(uint8_t joint_id)
     else
         data.position_0deg01 = temp;
 
+    // if(joint_id==0)
+    //     printf("GOT setpoint in degs: %f\t setting setpoint to: %ld\t\r\n", joints[joint_id].moveSetpoint.position_deg, data.position_0deg01);
+
     CAN_vars::joints[joint_id].setpoint = data;
+
+    jointCmdVelocity_t velData;
+
+    temp = (((10.0f*60)/360.0f) / gearRatio) * joints[joint_id].moveSetpoint.velocity_deg_s * direction;
+    if (temp >= INT16_MAX)
+        velData.velocity_0RPM_1 = INT16_MAX;
+    else if (temp <= INT16_MIN)
+        velData.velocity_0RPM_1 = INT16_MIN;
+    else
+        velData.velocity_0RPM_1 = temp;
+    
+    CAN_vars::joints[joint_id].velSetpoint = velData;
 }
 
 /**

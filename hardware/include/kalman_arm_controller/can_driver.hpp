@@ -43,8 +43,10 @@ namespace CAN_driver
 
     int init();
     int read();
-    int write();
+    int write(ControlType controlType);
+    int write_control_type(ControlType controlType);
     int write_joint_setpoint(uint8_t joint_id);
+    int write_joint_posvel(uint8_t joint_id);
     int write_data(uint16_t can_id, uint8_t *data, uint8_t len);
     int handle_frame(canfd_frame frame);
     int close();

@@ -5,10 +5,13 @@ controller_manager:
         joint_state_broadcaster:
             type: joint_state_broadcaster/JointStateBroadcaster
 
-        arm_controller:
-            type: kalman_arm_controller/RobotController
+        joint_trajectory_controller:
+            type: joint_trajectory_controller/JointTrajectoryController
 
-arm_controller:
+        velocity_controller:
+            type: velocity_controllers/JointGroupVelocityController
+
+joint_trajectory_controller:
     ros__parameters:
         joints:
             - joint_1
@@ -20,8 +23,34 @@ arm_controller:
 
         command_interfaces:
             - position
-            - velocity
+            # - velocity
 
         state_interfaces:
             - position
             - velocity
+
+        open_loop_control: true
+
+        allow_nonzero_velocity_at_trajectory_end: false
+
+
+
+velocity_controller:
+    ros__parameters:
+        joints:
+            - joint_1
+            - joint_2
+            - joint_3
+            - joint_4
+            - joint_5
+            - joint_6
+
+        command_interfaces:
+            # - position
+            - velocity
+
+        # state_interfaces:
+        #     - position
+        #     - velocity
+
+        # allow_nonzero_velocity_at_trajectory_end: false

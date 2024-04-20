@@ -164,7 +164,7 @@ namespace kalman_arm_controller
 
         if (trajectory_msg_ != nullptr)
         {
-            interpolate_trajectory_point(*trajectory_msg_, time - start_time_, point_interp_);
+            // interpolate_trajectory_point(*trajectory_msg_, time - start_time_, point_interp_);
             for (size_t i = 0; i < joint_position_command_interface_.size(); i++)
             {
                 joint_position_command_interface_[i].get().set_value(point_interp_.positions[i]);
