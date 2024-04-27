@@ -96,8 +96,8 @@ void CAN_vars::calculate_status_diff(uint8_t joint_id, uint8_t diff_id)
     difConfig[0] = &CAN_vars::arm_config.joint[difNbr[0]];
     difConfig[1] = &CAN_vars::arm_config.joint[difNbr[1]];
 
-    difStatus[0] = &CAN_vars::joints[difNbr[0]].fastStatus;
-    difStatus[1] = &CAN_vars::joints[difNbr[1]].fastStatus;
+    difStatus[0] = &CAN_vars::joints[difNbr[0]-1].fastStatus;
+    difStatus[1] = &CAN_vars::joints[difNbr[1]-1].fastStatus;
 
     for (uint8_t i = 0; i < 2; i++)
     {
@@ -107,7 +107,7 @@ void CAN_vars::calculate_status_diff(uint8_t joint_id, uint8_t diff_id)
     }
 
     joints[difNbr[0] - 1].moveStatus.velocity_deg_s = (velocity[0] - velocity[1]) / 2;
-    joints[difNbr[0] - 1].moveStatus.position_deg = (position[0] - position[1]) / 2;
+    joints[difNbr[0] - 1].moveStatus.position_deg = -(position[0] - position[1]) / 2;
 
     joints[difNbr[1] - 1].moveStatus.velocity_deg_s = (velocity[0] + velocity[1]) / 2;
     joints[difNbr[1] - 1].moveStatus.position_deg = (position[0] + position[1]) / 2;
