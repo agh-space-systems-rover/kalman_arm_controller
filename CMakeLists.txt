@@ -78,6 +78,16 @@ foreach(Dependency IN ITEMS ${TWIST_REPUB_DEPS})
 endforeach()
 
 
+# Component Nodes (Shared libraries) ############################
+set(SERVO_CONTROLLER_INPUT servo_controller_input)
+
+
+# Add executable for using a controller
+add_library(${SERVO_CONTROLLER_INPUT} SHARED reference_generator/joystick_servo_example.cpp)
+ament_target_dependencies(${SERVO_CONTROLLER_INPUT} ${THIS_PACKAGE_INCLUDE_DEPENDS})
+rclcpp_components_register_nodes(${SERVO_CONTROLLER_INPUT} "moveit_servo::JoyToServoPub")
+
+
 ## COMPILE
 add_executable(send_trajectory reference_generator/send_trajectory.cpp)
 
@@ -191,6 +201,7 @@ install(TARGETS twist_republisher
     DESTINATION lib/${PROJECT_NAME})
 
 install(TARGETS kalman_arm_controller
+    ${SERVO_CONTROLLER_INPUT}
   EXPORT export_kalman_arm_controller
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
