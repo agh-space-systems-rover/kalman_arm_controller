@@ -2,13 +2,6 @@
 #define KALMAN_ARM_CONTROLLER__HARDWARE__CAN_DRIVER_HPP
 
 #include "can_types.hpp"
-#include "can_handlers.hpp"
-// #include "can_vars.hpp"
-#include "arm_config.hpp"
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <unistd.h>
 
 #include <net/if.h>
@@ -17,7 +10,8 @@
 
 #include <linux/can.h>
 #include <linux/can/raw.h>
-#include <exception>
+#include <mutex>
+#include <thread>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include "rclcpp/rclcpp.hpp"
@@ -30,26 +24,44 @@ Potrzebne:
 - wysyłanie ramek z wartościami zadanych do odpowiednich jointów
 */
 
-namespace CAN_driver
+class CanDriver
 {
-    extern int sock;
-    extern struct sockaddr_can addr;
-    extern struct ifreq ifr;
+protected:
+  int sock = 0;
+  const char* can_interface = "can1";
+  virtual int handle_frame(canfd_frame frame);
+  int write_data(uint16_t can_id, uint8_t* data, uint8_t len);
 
-    extern std::mutex m_read;
-    extern std::mutex m_write;
-    extern std::thread reader;
-    extern bool should_run;
+public:
+  std::mutex m_read;
+  std::mutex m_write;
+  std::thread reader;
+  bool should_run = true;
 
-    int init();
-    int read();
-    int write(ControlType controlType);
-    int write_control_type(ControlType controlType);
-    int write_joint_setpoint(uint8_t joint_id);
-    int write_joint_posvel(uint8_t joint_id);
-    int write_data(uint16_t can_id, uint8_t *data, uint8_t len);
-    int handle_frame(canfd_frame frame);
-    int close();
-}
+  CanDriver(const char* can_interface) : can_interface(can_interface)
+  {
+  }
+  int init();
+  int read();
+  virtual int write(ControlType controlType);
+  int close();
+};
 
-#endif // KALMAN_ARM_CONTROLLER__HARDWARE__CAN_DRIVER_HPP
+class ArmCanDriver : public CanDriver
+{
+protected:
+  int handle_frame(canfd_frame frame);
+
+public:
+  ArmCanDriver(const char* can_interface) : CanDriver(can_interface)
+  {
+  }
+  int init();
+  int write(ControlType controlType);
+  int write_control_type(ControlType controlType);
+  int write_joint_setpoint(uint8_t joint_id);
+  int write_joint_posvel(uint8_t joint_id);
+  int write_data(uint16_t can_id, uint8_t* data, uint8_t len);
+};
+
+#endif  // KALMAN_ARM_CONTROLLER__HARDWARE__CAN_DRIVER_HPP
