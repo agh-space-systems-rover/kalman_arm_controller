@@ -1,6 +1,6 @@
-#include "kalman_arm_controller/can_handlers.hpp"
-#include "kalman_arm_controller/can_messages.hpp"
-#include "kalman_arm_controller/can_vars.hpp"
+#include "kalman_arm_controller/can_lib/can_handlers.hpp"
+#include "kalman_arm_controller/can_lib/can_messages.hpp"
+#include "kalman_arm_controller/can_lib/can_vars.hpp"
 
 namespace CAN_handlers
 {

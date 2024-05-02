@@ -1,7 +1,7 @@
-#include "kalman_arm_controller/arm_config.hpp"
+#include "kalman_arm_controller/can_lib/arm_config.hpp"
 
-#include "kalman_arm_controller/can_types.hpp"
-#include "kalman_arm_controller/can_vars.hpp"
+#include "kalman_arm_controller/can_lib/can_types.hpp"
+#include "kalman_arm_controller/can_lib/can_vars.hpp"
 
 namespace arm_config
 {

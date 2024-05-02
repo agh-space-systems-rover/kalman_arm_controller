@@ -1,12 +1,12 @@
-#include "kalman_arm_controller/can_driver.hpp"
+#include "kalman_arm_controller/can_lib/can_driver.hpp"
 #include <poll.h>
 #include <cstdio>
 #include <mutex>
 #include <cerrno>
 #include <cstring>
-#include "kalman_arm_controller/arm_config.hpp"
-#include "kalman_arm_controller/can_handlers.hpp"
-#include "kalman_arm_controller/can_vars.hpp"
+#include "kalman_arm_controller/can_lib/arm_config.hpp"
+#include "kalman_arm_controller/can_lib/can_handlers.hpp"
+#include "kalman_arm_controller/can_lib/can_vars.hpp"
 
 #define BUFFER_SIZE 1024
 #define TIMEOUT_MS 1  // 5 seconds

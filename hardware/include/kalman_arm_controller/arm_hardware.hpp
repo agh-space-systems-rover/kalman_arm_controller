@@ -6,7 +6,8 @@
 #include <vector>
 #include <future>
 
-#include "can_driver.hpp"
+#include "can_lib/can_driver.hpp"
+#include "can_lib/can_types.hpp"
 
 #include "hardware_interface/handle.hpp"
 #include "hardware_interface/hardware_info.hpp"
