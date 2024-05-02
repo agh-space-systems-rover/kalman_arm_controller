@@ -48,7 +48,7 @@
 #include <rclcpp/node.hpp>
 #include <rclcpp/publisher.hpp>
 #include <rclcpp/qos.hpp>
-#include <rclcpp/qos_event.hpp>
+#include <rclcpp/event_handler.hpp>
 #include <rclcpp/subscription.hpp>
 #include <rclcpp/time.hpp>
 #include <rclcpp/utilities.hpp>
@@ -56,7 +56,6 @@
 
 // We'll just set up parameters here
 const std::string JOY_TOPIC = "/joy";
-const std::string TWIST_TOPIC = "/servo_node/delta_twist_cmds";
 const std::string JOINT_TOPIC = "/servo_node/delta_joint_cmds";
 const std::string EEF_FRAME_ID = "ee";
 const std::string BASE_FRAME_ID = "arm_link";
@@ -94,8 +93,6 @@ enum Button
 std::map<Axis, double> AXIS_DEFAULTS = { { LEFT_TRIGGER, 1.0 }, { RIGHT_TRIGGER, 1.0 } };
 std::map<Button, double> BUTTON_DEFAULTS;
 
-// To change controls or setup a new controller, all you should to do is change the above enums and the follow 2
-// functions
 /** \brief // This converts a joystick axes and buttons array to a TwistStamped or JointJog message
  * @param axes The vector of continuous controller joystick axes
  * @param buttons The vector of discrete controller button values
@@ -104,27 +101,8 @@ std::map<Button, double> BUTTON_DEFAULTS;
  * @return return true if you want to publish a Twist, false if you want to publish a JointJog
  */
 bool convertJoyToCmd(const std::vector<float>& axes, const std::vector<int>& buttons,
-                     std::unique_ptr<geometry_msgs::msg::TwistStamped>& twist,
                      std::unique_ptr<control_msgs::msg::JointJog>& joint)
 {
-  // Give joint jogging priority because it is only buttons
-  // If any joint jog command is requested, we are only publishing joint commands
-  if (buttons[A] || buttons[B] || buttons[X] || buttons[Y] || axes[D_PAD_X] || axes[D_PAD_Y])
-  {
-    // Map the D_PAD to the proximal joints
-    joint->joint_names.push_back("joint_6");
-    joint->velocities.push_back(axes[D_PAD_X]);
-    joint->joint_names.push_back("joint_5");
-    joint->velocities.push_back(axes[D_PAD_Y]);
-
-    // Map the diamond to the distal joints
-    // joint->joint_names.push_back("panda_joint7");
-    // joint->velocities.push_back(buttons[B] - buttons[X]);
-    // joint->joint_names.push_back("panda_joint6");
-    // joint->velocities.push_back(buttons[Y] - buttons[A]);
-    return false;
-  }
-
   joint->joint_names.push_back("joint_1");
   joint->velocities.push_back(axes[LEFT_STICK_X]);
   joint->joint_names.push_back("joint_2");
@@ -133,21 +111,10 @@ bool convertJoyToCmd(const std::vector<float>& axes, const std::vector<int>& but
   joint->velocities.push_back(axes[RIGHT_STICK_Y]);
   joint->joint_names.push_back("joint_4");
   joint->velocities.push_back(axes[RIGHT_STICK_X]);
-
-  // The bread and butter: map buttons to twist commands
-  //   twist->twist.linear.z = axes[RIGHT_STICK_Y];
-  //   twist->twist.linear.y = axes[RIGHT_STICK_X];
-
-  //   double lin_x_right = -0.5 * (axes[RIGHT_TRIGGER] - AXIS_DEFAULTS.at(RIGHT_TRIGGER));
-  //   double lin_x_left = 0.5 * (axes[LEFT_TRIGGER] - AXIS_DEFAULTS.at(LEFT_TRIGGER));
-  //   twist->twist.linear.x = lin_x_right + lin_x_left;
-
-  //   twist->twist.angular.y = axes[LEFT_STICK_Y];
-  //   twist->twist.angular.x = axes[LEFT_STICK_X];
-
-  //   double roll_positive = buttons[RIGHT_BUMPER];
-  //   double roll_negative = -1 * (buttons[LEFT_BUMPER]);
-  //   twist->twist.angular.z = roll_positive + roll_negative;
+  joint->joint_names.push_back("joint_6");
+  joint->velocities.push_back(axes[D_PAD_X]);
+  joint->joint_names.push_back("joint_5");
+  joint->velocities.push_back(axes[D_PAD_Y]);
 
   return false;
 }
@@ -166,18 +133,18 @@ void updateCmdFrame(std::string& frame_name, const std::vector<int>& buttons)
 
 namespace moveit_servo
 {
+
 class JoyToServoPub : public rclcpp::Node
 {
 public:
   JoyToServoPub(const rclcpp::NodeOptions& options)
-    : Node("joy_to_twist_publisher", options), frame_to_publish_(BASE_FRAME_ID)
+    : Node("joy_from_master_republisher", options), frame_to_publish_(BASE_FRAME_ID)
   {
     // Setup pub/sub
     joy_sub_ = this->create_subscription<sensor_msgs::msg::Joy>(
         JOY_TOPIC, rclcpp::SystemDefaultsQoS(),
         [this](const sensor_msgs::msg::Joy::ConstSharedPtr& msg) { return joyCB(msg); });
 
-    twist_pub_ = this->create_publisher<geometry_msgs::msg::TwistStamped>(TWIST_TOPIC, rclcpp::SystemDefaultsQoS());
     joint_pub_ = this->create_publisher<control_msgs::msg::JointJog>(JOINT_TOPIC, rclcpp::SystemDefaultsQoS());
     collision_pub_ =
         this->create_publisher<moveit_msgs::msg::PlanningScene>("/planning_scene", rclcpp::SystemDefaultsQoS());
@@ -197,27 +164,16 @@ public:
   void joyCB(const sensor_msgs::msg::Joy::ConstSharedPtr& msg)
   {
     // Create the messages we might publish
-    auto twist_msg = std::make_unique<geometry_msgs::msg::TwistStamped>();
     auto joint_msg = std::make_unique<control_msgs::msg::JointJog>();
 
     // This call updates the frame for twist commands
     updateCmdFrame(frame_to_publish_, msg->buttons);
 
     // Convert the joystick message to Twist or JointJog and publish
-    if (convertJoyToCmd(msg->axes, msg->buttons, twist_msg, joint_msg))
-    {
-      // publish the TwistStamped
-      twist_msg->header.frame_id = frame_to_publish_;
-      twist_msg->header.stamp = this->now();
-      twist_pub_->publish(std::move(twist_msg));
-    }
-    else
-    {
-      // publish the JointJog
-      joint_msg->header.stamp = this->now();
-      joint_msg->header.frame_id = "arm_link";
-      joint_pub_->publish(std::move(joint_msg));
-    }
+    convertJoyToCmd(msg->axes, msg->buttons, joint_msg);
+    joint_msg->header.stamp = this->now();
+    joint_msg->header.frame_id = "arm_link";
+    joint_pub_->publish(std::move(joint_msg));
   }
 
 private:

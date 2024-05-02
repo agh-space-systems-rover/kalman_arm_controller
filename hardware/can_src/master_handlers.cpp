@@ -21,6 +21,9 @@ public:
     joy_pub = node->create_publisher<sensor_msgs::msg::Joy>("joy", 10);
     return 0;
   }
+
+  // Add handlers below
+
   static int handle_joy(uint32_t identifier, uint8_t* data, uint8_t len)
   {
     sensor_msgs::msg::Joy joy_msg;

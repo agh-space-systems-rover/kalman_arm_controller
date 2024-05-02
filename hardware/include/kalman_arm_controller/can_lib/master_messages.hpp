@@ -5,10 +5,11 @@
 /*********RECEIVED MESSAGES***********/
 
 /**
- * @brief Structure representing the fast status (only vel and pos).
+ * @brief Structure representing the joystick control message received from the CAN bus.
  *
- * @param velocity int16_t Velocity - bytes 0-1
- * @param position int32_t Position - bytes 2-5
+ * This structure is used to represent the joystick control message received from the CAN bus.
+ *
+ * @param axes int8_t[6] Axes values - bytes 0-5
  */
 typedef struct __attribute__((__packed__))
 {
