@@ -90,6 +90,13 @@ ament_target_dependencies(${SERVO_CONTROLLER_INPUT} ${THIS_PACKAGE_INCLUDE_DEPEN
 rclcpp_components_register_nodes(${SERVO_CONTROLLER_INPUT} "moveit_servo::JoyToServoPub")
 
 
+set(MASTER_CAN master_can_node)
+
+add_library(${MASTER_CAN} SHARED hardware/master_hardware.cpp)
+ament_target_dependencies(${MASTER_CAN} ${THIS_PACKAGE_INCLUDE_DEPENDS})
+rclcpp_components_register_nodes(${MASTER_CAN} "kalman_master::CanMasterNode")
+
+
 ## COMPILE
 add_executable(send_trajectory reference_generator/send_trajectory.cpp)
 
