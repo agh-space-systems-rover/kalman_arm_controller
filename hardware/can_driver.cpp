@@ -14,7 +14,7 @@
 /**
  * @brief Initialize the CAN driver.
  *
- * Initializes the CAN driver and binds the socket to the can0 interface
+ * Initializes the CAN driver, binds to `can_interface`, and starts the read loop.
  *
  * @return int 0 on success, 1 on failure
  */
@@ -53,51 +53,84 @@ int CanDriver::init()
   tv.tv_usec = 1;
   setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof tv);
 
-  // ! Export this elsewhere
-  this->reader = std::thread(&CanDriver::read, this);
+  this->reader = std::thread(&CanDriver::read_loop, this);
 
   printf("Finished CAN init! \r\n");
   return 0;
 }
 
-int CanDriver::read()
+/**
+ * @brief Read for the CAN driver.
+ *
+ * Reads frames from the CAN bus and calls the appropriate handler function.
+ *
+ * @return int 0 on success, 1 on failure
+ */
+int CanDriver::read(char* buffer)
 {
-  char buffer[BUFFER_SIZE];
-  while (should_run)
+  ssize_t num_bytes = recv(sock, buffer, BUFFER_SIZE, MSG_DONTWAIT);
+
+  if (num_bytes < 0)
   {
-    ssize_t num_bytes = recv(sock, buffer, BUFFER_SIZE, MSG_DONTWAIT);
-
-    if (num_bytes < 0)
+    if (errno == EAGAIN || errno == EWOULDBLOCK)
     {
-      if (errno == EAGAIN || errno == EWOULDBLOCK)
-      {
-        // there was nothing to read (recv MSG_DONTWAIT flag docs)
-        std::this_thread::sleep_for(std::chrono::milliseconds{ 1 });
-        continue;
-      }
-      else
-      {
-        RCLCPP_FATAL(rclcpp::get_logger("my_logger"), "CanDriver::read: recv failed due to: %s\r\n",
-                     std::strerror(errno));
-        exit(EXIT_FAILURE);
-      }
+      // there was nothing to read (recv MSG_DONTWAIT flag docs)
+      std::this_thread::sleep_for(std::chrono::milliseconds{ 1 });
+      return 0;
     }
+    else
+    {
+      RCLCPP_FATAL(rclcpp::get_logger("my_logger"), "CanDriver::read: recv failed due to: %s\r\n", std::strerror(errno));
+      exit(EXIT_FAILURE);
+    }
+  }
 
-    buffer[num_bytes] = '\0';  // Null-terminate the received data
-    struct canfd_frame frame;
+  buffer[num_bytes] = '\0';  // Null-terminate the received data
+  struct canfd_frame frame;
 
-    frame = *((struct canfd_frame*)buffer);
+  frame = *((struct canfd_frame*)buffer);
 
-    // We don't need to lock the recv invocation
-    std::lock_guard<std::mutex> lock(m_read);  // Yay for RAII
-    handle_frame(frame);
+  // We don't need to lock the recv invocation
+  std::lock_guard<std::mutex> lock(m_read);  // Yay for RAII
+  handle_frame(frame);
 
-    // ! Export this elsewhere
-    CAN_vars::update_joint_status();
+  return 0;
+}
+
+/**
+ * @brief Handle a received frame.
+ *
+ * Decodes the frame and calls the appropriate handler function.
+ *
+ * @param frame The frame to handle
+ * @return int 0 on success, 1 on failure
+ */
+int CanDriver::handle_frame(canfd_frame frame)
+{
+  // Decode the frame
+  uint8_t joint_id = frame.can_id >> 7;
+  uint8_t command = frame.can_id - (joint_id << 7);
+  try
+  {
+    if (handles->find(command) != handles->end())
+      (*handles)[command].func(frame.can_id, frame.data, frame.len);
+  }
+  catch (const std::exception& e)
+  {
+    RCLCPP_WARN(rclcpp::get_logger("my_logger"), "Caught exception: %s\r\n", e.what());
+    return 1;
   }
   return 0;
 }
 
+/**
+ * @brief Writes data to the CAN bus.
+ *
+ * @param can_id - The CAN ID to write to
+ * @param data - The data to write
+ * @param len - The length of the data
+ * @return int
+ */
 int CanDriver::write_data(uint16_t can_id, uint8_t* data, uint8_t len)
 {
   struct canfd_frame frame;
@@ -114,6 +147,13 @@ int CanDriver::write_data(uint16_t can_id, uint8_t* data, uint8_t len)
   return 0;
 }
 
+/**
+ * @brief Close the CAN driver.
+ *
+ * Closes the CAN driver and stops the read loop.
+ *
+ * @return int 0 on success, 1 on failure
+ */
 int CanDriver::close()
 {
   CanDriver::should_run = false;
@@ -128,32 +168,18 @@ int ArmCanDriver::init()
 
   // Load default configuration
   arm_config::load_default_config();
+  this->handles = &CAN_handlers::ARM_HANDLES;
 
   return 0;
 }
 
-/**
- * @brief Handle a received frame.
- *
- * Decodes the frame and calls the appropriate handler function.
- *
- * @param frame The frame to handle
- * @return int 0 on success, 1 on failure
- */
-int ArmCanDriver::handle_frame(canfd_frame frame)
+int ArmCanDriver::read_loop()
 {
-  // Decode the frame
-  uint8_t joint_id = frame.can_id >> 7;
-  uint8_t command = frame.can_id - (joint_id << 7);
-  try
+  char buffer[BUFFER_SIZE];
+  while (this->should_run)
   {
-    if (CAN_handlers::ARM_HANDLES.find(command) != CAN_handlers::ARM_HANDLES.end())
-      CAN_handlers::ARM_HANDLES[command].func(frame.can_id, frame.data, frame.len);
-  }
-  catch (const std::exception& e)
-  {
-    RCLCPP_WARN(rclcpp::get_logger("my_logger"), "Caught exception: %s\r\n", e.what());
-    return 1;
+    read(buffer);
+    CAN_vars::update_joint_status();
   }
   return 0;
 }
@@ -172,12 +198,10 @@ int ArmCanDriver::write(ControlType controlType)
     switch (controlType)
     {
       case ControlType::position:
-        // printf("position\r\n");
         write_joint_setpoint(i);
         break;
 
       case ControlType::posvel:
-        // printf("posvel\r\n");
         write_joint_posvel(i);
         break;
     }

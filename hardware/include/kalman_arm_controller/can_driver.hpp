@@ -12,6 +12,7 @@
 #include <linux/can/raw.h>
 #include <mutex>
 #include <thread>
+#include <unordered_map>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include "rclcpp/rclcpp.hpp"
@@ -29,8 +30,10 @@ class CanDriver
 protected:
   int sock = 0;
   const char* can_interface = "can1";
-  virtual int handle_frame(canfd_frame frame);
+  int handle_frame(canfd_frame frame);
+  std::unordered_map<uint8_t, canCmdHandler_t>* handles;
   int write_data(uint16_t can_id, uint8_t* data, uint8_t len);
+  int read(char* buffer);
 
 public:
   std::mutex m_read;
@@ -42,21 +45,19 @@ public:
   {
   }
   int init();
-  int read();
+  virtual int read_loop();
   virtual int write(ControlType controlType);
   int close();
 };
 
 class ArmCanDriver : public CanDriver
 {
-protected:
-  int handle_frame(canfd_frame frame);
-
 public:
   ArmCanDriver(const char* can_interface) : CanDriver(can_interface)
   {
   }
   int init();
+  int read_loop();
   int write(ControlType controlType);
   int write_control_type(ControlType controlType);
   int write_joint_setpoint(uint8_t joint_id);
