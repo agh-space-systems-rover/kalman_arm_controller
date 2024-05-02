@@ -18,7 +18,6 @@ std::unordered_map<uint8_t, canCmdHandler_t> ARM_HANDLES = {
 int handle_joint_status(uint32_t identifier, uint8_t* data, uint8_t len)
 {
   uint8_t joint_id = identifier >> 7;
-  uint8_t command = identifier - (joint_id << 7);
 
   joint_id--;
 
@@ -37,13 +36,17 @@ int handle_joint_status(uint32_t identifier, uint8_t* data, uint8_t len)
 int handle_joint_fast_status(uint32_t identifier, uint8_t* data, uint8_t len)
 {
   uint8_t joint_id = identifier >> 7;
-  uint8_t command = identifier - (joint_id << 7);
 
   joint_id--;
 
   jointMotorFastStatus_t* status = (jointMotorFastStatus_t*)data;
 
   CAN_vars::joints[joint_id].fastStatus = *status;
+  return 0;
 }
+
+std::unordered_map<uint8_t, canCmdHandler_t> MASTER_HANDLES = {
+
+};
 
 }  // namespace CAN_handlers

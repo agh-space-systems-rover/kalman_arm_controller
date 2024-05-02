@@ -12,6 +12,7 @@ int handle_joint_fast_status(uint32_t identifier, uint8_t* data, uint8_t len);
 
 // Declare the command handler array
 extern std::unordered_map<uint8_t, canCmdHandler_t> ARM_HANDLES;
+extern std::unordered_map<uint8_t, canCmdHandler_t> MASTER_HANDLES;
 }  // namespace CAN_handlers
 
 #endif  // KALMAN_ARM_CONTROLLER__HARDWARE__CAN_HANDLERS_HPP

@@ -253,3 +253,31 @@ int ArmCanDriver::write_joint_posvel(uint8_t joint_id)
   }
   return 1;
 }
+
+int MasterCanDriver::init()
+{
+  printf("In MasterCanDriver::init\r\n");
+  CanDriver::init();
+
+  this->handles = &CAN_handlers::MASTER_HANDLES;
+
+  return 0;
+}
+
+int MasterCanDriver::read_loop()
+{
+  char buffer[BUFFER_SIZE];
+  while (this->should_run)
+  {
+    read(buffer);
+  }
+  return 0;
+}
+
+int MasterCanDriver::write()
+{
+  std::lock_guard<std::mutex> lock(CanDriver::m_write);
+
+  // TODO write data to master
+  return 0;
+}
