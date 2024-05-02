@@ -7,7 +7,7 @@
 #define KALMAN_ARM_CONTROLLER__HARDWARE__CAN_TYPES_HPP_
 
 #include <cstdint>
-#include "can_messages.hpp"
+#include "arm_messages.hpp"
 
 /**
  * @brief Structure representing a CAN message handler.
@@ -20,9 +20,9 @@
  */
 typedef struct
 {
-    uint16_t can_id;
-    uint8_t len;
-    int (*func)(uint32_t identifier, uint8_t *data, uint8_t len);
+  uint16_t can_id;
+  uint8_t len;
+  int (*func)(uint32_t identifier, uint8_t* data, uint8_t len);
 } canCmdHandler_t;
 
 /**
@@ -31,16 +31,16 @@ typedef struct
  */
 typedef struct
 {
-    float velocity_deg_s;
-    float position_deg;
+  float velocity_deg_s;
+  float position_deg;
 } jointMoveStatus_t;
 
 typedef struct
 {
-    float torque_Nm;
-    float velocity_deg_s;
-    float position_deg;
-    float acceleration_deg_ss;
+  float torque_Nm;
+  float velocity_deg_s;
+  float position_deg;
+  float acceleration_deg_ss;
 } jointMoveSetpoint_t;
 
 /**
@@ -53,39 +53,39 @@ typedef struct
  */
 typedef struct __attribute__((__packed__))
 {
-    /**
-     * @brief Structure representing the status of a joint motor received from CAN.
-     */
-    jointMotorStatus_t status;
+  /**
+   * @brief Structure representing the status of a joint motor received from CAN.
+   */
+  jointMotorStatus_t status;
 
-    /**
-     * @brief Structure representing the fast status (only pos and vel) of a joint motor received from CAN.
-     */
-    jointMotorFastStatus_t fastStatus;
+  /**
+   * @brief Structure representing the fast status (only pos and vel) of a joint motor received from CAN.
+   */
+  jointMotorFastStatus_t fastStatus;
 
-    /**
-     * @brief Structure representing the setpoint of a joint motor to send via CAN.
-     */
-    jointCmdSetpoint_t setpoint;
+  /**
+   * @brief Structure representing the setpoint of a joint motor to send via CAN.
+   */
+  jointCmdSetpoint_t setpoint;
 
-    jointCmdVelocity_t velSetpoint;
+  jointCmdVelocity_t velSetpoint;
 
-    /**
-     * @brief Structure representing the received status of a joint motor already calculated to normal, humanreadable
-     * and supported by moveit format.
-     */
-    jointMoveStatus_t moveStatus;
+  /**
+   * @brief Structure representing the received status of a joint motor already calculated to normal, humanreadable
+   * and supported by moveit format.
+   */
+  jointMoveStatus_t moveStatus;
 
-    /**
-     * @brief Structure representing the setpoint of a joint motor already calculated to normal, humanreadable
-     * and supported by moveit format.
-     */
-    jointMoveSetpoint_t moveSetpoint;
+  /**
+   * @brief Structure representing the setpoint of a joint motor already calculated to normal, humanreadable
+   * and supported by moveit format.
+   */
+  jointMoveSetpoint_t moveSetpoint;
 
-    /**
-     * @brief Structure where the setpoint of differential joints is stored (later converted to `moveSetpoint`).
-     */
-    jointMoveSetpoint_t moveSetpointDiff;
+  /**
+   * @brief Structure where the setpoint of differential joints is stored (later converted to `moveSetpoint`).
+   */
+  jointMoveSetpoint_t moveSetpointDiff;
 } jointStatus_t;
 
 /**
@@ -95,27 +95,26 @@ typedef struct __attribute__((__packed__))
  */
 typedef struct
 {
+  float maxVelocity_deg_s;
+  float maxAcceleration_deg_ss;
+  float maxTorque_Nm;
 
-    float maxVelocity_deg_s;
-    float maxAcceleration_deg_ss;
-    float maxTorque_Nm;
+  float minPosition_deg, maxPosition_deg;
 
-    float minPosition_deg, maxPosition_deg;
+  float positionAfterPositioning;
+  float idleTorque_Nm;
+  float defVelocity_deg_s;
+  float defAcceleration_deg_ss;
+  float defAcceleration_pos_deg_ss;
 
-    float positionAfterPositioning;
-    float idleTorque_Nm;
-    float defVelocity_deg_s;
-    float defAcceleration_deg_ss;
-    float defAcceleration_pos_deg_ss;
+  float gearRatio;
 
-    float gearRatio;
-
-    uint8_t invertDirection;
-    uint8_t requirePositioning;
-    uint8_t positioningOrder;
-    float positioningVelocity;
-    uint16_t positioningTimeout;
-    uint8_t differential;
+  uint8_t invertDirection;
+  uint8_t requirePositioning;
+  uint8_t positioningOrder;
+  float positioningVelocity;
+  uint16_t positioningTimeout;
+  uint8_t differential;
 
 } jointConfig_t;
 
@@ -126,19 +125,19 @@ typedef struct
  */
 typedef struct
 {
-    uint8_t jointNumber;
+  uint8_t jointNumber;
 
-    jointConfig_t joint[16];
-    uint16_t jointCommandRefreshTime_ms;
-    uint16_t jointCommunicationTimeout;
-    uint16_t canRoverStatusSendPeriod_ms;
+  jointConfig_t joint[16];
+  uint16_t jointCommandRefreshTime_ms;
+  uint16_t jointCommunicationTimeout;
+  uint16_t canRoverStatusSendPeriod_ms;
 
 } armConfig_t;
 
 enum ControlType
 {
-    position,
-    posvel
+  position,
+  posvel
 };
 
-#endif // KALMAN_ARM_CONTROLLER__HARDWARE__CAN_TYPES_HPP_
+#endif  // KALMAN_ARM_CONTROLLER__HARDWARE__CAN_TYPES_HPP_

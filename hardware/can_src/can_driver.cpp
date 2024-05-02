@@ -5,7 +5,8 @@
 #include <cerrno>
 #include <cstring>
 #include "kalman_arm_controller/can_lib/arm_config.hpp"
-#include "kalman_arm_controller/can_lib/can_handlers.hpp"
+#include "kalman_arm_controller/can_lib/arm_handlers.hpp"
+#include "kalman_arm_controller/can_lib/master_handlers.hpp"
 #include "kalman_arm_controller/can_lib/can_vars.hpp"
 
 #define BUFFER_SIZE 1024

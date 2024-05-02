@@ -140,7 +140,8 @@ add_library(
   hardware/arm_hardware.cpp
   hardware/can_src/arm_config.cpp
   hardware/can_src/can_driver.cpp
-  hardware/can_src/can_handlers.cpp
+  hardware/can_src/arm_handlers.cpp
+  hardware/can_src/master_handlers.cpp
   hardware/can_src/can_vars.cpp
   controller/arm_controller.cpp
 )

@@ -1,5 +1,5 @@
-#include "kalman_arm_controller/can_lib/can_handlers.hpp"
-#include "kalman_arm_controller/can_lib/can_messages.hpp"
+#include "kalman_arm_controller/can_lib/arm_handlers.hpp"
+#include "kalman_arm_controller/can_lib/arm_messages.hpp"
 #include "kalman_arm_controller/can_lib/can_vars.hpp"
 
 namespace CAN_handlers
@@ -44,9 +44,5 @@ int handle_joint_fast_status(uint32_t identifier, uint8_t* data, uint8_t len)
   CAN_vars::joints[joint_id].fastStatus = *status;
   return 0;
 }
-
-std::unordered_map<uint8_t, canCmdHandler_t> MASTER_HANDLES = {
-
-};
 
 }  // namespace CAN_handlers
