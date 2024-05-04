@@ -104,7 +104,7 @@ namespace kalman_arm_controller
         else
         {
             {
-
+                
                 // for (int i = 0; i < 6; i++)
                 //     {
                 //         printf("COMMANDS POS FOR JOINT %d: \t last: %f\t setpoint%f\r\n", i, CAN_vars::joints[i].moveSetpoint.position_deg, joint_position_command_[i] * 180.0f / M_PI);
@@ -113,11 +113,11 @@ namespace kalman_arm_controller
                 for (int i = 0; i<6; i++){
                     if(CAN_vars::joints[i].moveSetpoint.position_deg != joint_position_command_[i] * 180.0f / M_PI){
                         // printf("COMMANDS POS FOR JOINT %d: \t last: %f\t setpoint%f\r\n", i, CAN_vars::joints[i].moveSetpoint.position_deg, joint_position_command_[i] * 180.0f / M_PI);
-                        // current_control_type = ControlType::position;
+                        current_control_type = ControlType::position;
                     }
                     if(CAN_vars::joints[i].moveSetpoint.velocity_deg_s != joint_velocities_command_[i] * 180.0f / M_PI){
                         // printf("COMMANDS POSVEL FOR JOINT %d: \t last: %f\t setpoint%f\r\n", i, CAN_vars::joints[i].moveSetpoint.velocity_deg_s, joint_velocities_command_[i] * 180.0f / M_PI);
-                        current_control_type = ControlType::posvel;
+                        // current_control_type = ControlType::posvel;
                     }
                 }
 
