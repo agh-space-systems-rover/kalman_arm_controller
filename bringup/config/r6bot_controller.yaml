@@ -8,8 +8,8 @@ controller_manager:
         joint_trajectory_controller:
             type: joint_trajectory_controller/JointTrajectoryController
 
-        # velocity_controller:
-        #     type: velocity_controllers/JointGroupVelocityController
+        velocity_controller:
+            type: velocity_controllers/JointGroupVelocityController
 
 joint_trajectory_controller:
     ros__parameters:

@@ -76,7 +76,7 @@ namespace kalman_arm_controller
 
     return_type ArmSystem::write(const rclcpp::Time &, const rclcpp::Duration &)
     {
-        return write_joint_commands();
+                    return write_joint_commands();
     }
 
     return_type ArmSystem::read_joint_states()
@@ -113,11 +113,11 @@ namespace kalman_arm_controller
                 for (int i = 0; i<6; i++){
                     if(CAN_vars::joints[i].moveSetpoint.position_deg != joint_position_command_[i] * 180.0f / M_PI){
                         // printf("COMMANDS POS FOR JOINT %d: \t last: %f\t setpoint%f\r\n", i, CAN_vars::joints[i].moveSetpoint.position_deg, joint_position_command_[i] * 180.0f / M_PI);
-                        current_control_type = ControlType::position;
+                        // current_control_type = ControlType::position;
                     }
                     if(CAN_vars::joints[i].moveSetpoint.velocity_deg_s != joint_velocities_command_[i] * 180.0f / M_PI){
                         // printf("COMMANDS POSVEL FOR JOINT %d: \t last: %f\t setpoint%f\r\n", i, CAN_vars::joints[i].moveSetpoint.velocity_deg_s, joint_velocities_command_[i] * 180.0f / M_PI);
-                        // current_control_type = ControlType::posvel;
+                        current_control_type = ControlType::posvel;
                     }
                 }
 
@@ -138,7 +138,7 @@ namespace kalman_arm_controller
                 }
             }
             // Run write in a separate thread
-            writer = std::async(std::launch::async, [&]
+                        writer = std::async(std::launch::async, [&]
                                 { CAN_driver::write(current_control_type); });
         }
 

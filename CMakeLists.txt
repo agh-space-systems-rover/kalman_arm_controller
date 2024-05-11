@@ -95,6 +95,10 @@ add_executable(servo_keyboard_input reference_generator/servo_keyboard_input.cpp
 target_include_directories(servo_keyboard_input PUBLIC include)
 ament_target_dependencies(servo_keyboard_input ${THIS_PACKAGE_INCLUDE_DEPENDS})
 
+add_executable(monitor_planning_scene reference_generator/planning_scene_tutorial.cpp)
+target_include_directories(monitor_planning_scene PUBLIC include)
+ament_target_dependencies(monitor_planning_scene ${THIS_PACKAGE_INCLUDE_DEPENDS})
+
 
 add_executable(twist_republisher reference_generator/twist_republisher.cpp)
 target_include_directories(twist_republisher PUBLIC include)
@@ -196,6 +200,9 @@ install(TARGETS can_write_test
 
 install(TARGETS servo_keyboard_input
     DESTINATION lib/${PROJECT_NAME})
+
+install(TARGETS monitor_planning_scene
+DESTINATION lib/${PROJECT_NAME})
 
 install(TARGETS twist_republisher
     DESTINATION lib/${PROJECT_NAME})
