@@ -137,11 +137,11 @@ ament_target_dependencies(
 add_library(
   kalman_arm_controller
   SHARED
-  hardware/arm_hardware.cpp
   hardware/can_src/arm_config.cpp
   hardware/can_src/can_driver.cpp
   hardware/can_src/can_handlers.cpp
   hardware/can_src/can_vars.cpp
+  hardware/arm_hardware.cpp
   controller/arm_controller.cpp
 )
 
