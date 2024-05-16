@@ -24,14 +24,6 @@
 #include <netinet/in.h>
 #include "rclcpp/rclcpp.hpp"
 
-/*
-Potrzebne:
-- 6 jointów globalnych
-- konfiguracja CAN - wysłąnie ramki velocity
-- odczytywanie ramek, dekodowanie i zapisanie stanu do odpowiedniego jointa
-- wysyłanie ramek z wartościami zadanych do odpowiednich jointów
-*/
-
 namespace CAN_driver
 {
 typedef struct DriverVars_t
