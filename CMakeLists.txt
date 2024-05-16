@@ -106,6 +106,24 @@ ament_target_dependencies(
   ${HW_IF_INCLUDE_DEPENDS}
 )
 
+set(MASTER_HARDWARE master_hardware)
+
+add_library(${MASTER_HARDWARE} SHARED 
+    hardware/can_src/arm_config.cpp
+    hardware/can_src/can_driver.cpp
+    hardware/can_src/can_handlers.cpp
+    hardware/can_src/can_vars.cpp
+    scripts/master_hardware.cpp)
+
+# target_link_libraries(${MASTER_HARDWARE} PUBLIC kalman_arm_controller::kalman_arm_controller)
+ament_target_dependencies(${MASTER_HARDWARE} PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
+rclcpp_components_register_nodes(${MASTER_HARDWARE} "kalman_master::CanMasterNode")
+
+target_include_directories(${MASTER_HARDWARE} PUBLIC
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/hardware/include>
+    $<INSTALL_INTERFACE:include/kalman_arm_controller>
+)
+
 # Causes the visibility macros to use dllexport rather than dllimport,
 # which is appropriate when building the dll but not consuming it.
 target_compile_definitions(${PROJECT_NAME} PRIVATE "KALMAN_ARM_CONTROLLER_BUILDING_DLL")
@@ -142,6 +160,7 @@ install(TARGETS twist_republisher
 
 install(TARGETS kalman_arm_controller
     ${SERVO_CONTROLLER_INPUT}
+    ${MASTER_HARDWARE}
   EXPORT export_kalman_arm_controller
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib

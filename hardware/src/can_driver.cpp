@@ -9,7 +9,6 @@
 #define TIMEOUT_MS 1  // 5 seconds
 
 CAN_driver::DriverVars_t CAN_driver::arm_driver = {};
-CAN_driver::DriverVars_t* CAN_driver::master_driver = nullptr;
 
 /**
  * @brief Initialize the CAN driver.
@@ -18,7 +17,6 @@ CAN_driver::DriverVars_t* CAN_driver::master_driver = nullptr;
  *
  * @return int 0 on success, 1 on failure
  */
-extern "C" {
 int CAN_driver::init(DriverVars_t* driver_vars, const char* can_interface)
 {
   printf("In CAN_driver::init\r\n");
@@ -60,54 +58,10 @@ int CAN_driver::init(DriverVars_t* driver_vars, const char* can_interface)
   printf("Finished CAN init! \r\n");
   return 0;
 }
-}
+
 int CAN_driver::startArmRead()
 {
   arm_driver.reader = std::thread(CAN_driver::armRead);
-  return 0;
-}
-
-extern "C" {
-int CAN_driver::startMasterRead(DriverVars_t* driver_vars)
-{
-  driver_vars->reader = std::thread(CAN_driver::masterRead);
-  CAN_driver::master_driver = driver_vars;
-  return 0;
-}
-}
-
-int CAN_driver::masterRead()
-{
-  char buffer[BUFFER_SIZE];
-  while (master_driver->should_run)
-  {
-    ssize_t num_bytes = recv(master_driver->sock, buffer, BUFFER_SIZE, MSG_DONTWAIT);
-
-    if (num_bytes < 0)
-    {
-      if (errno == EAGAIN || errno == EWOULDBLOCK)
-      {
-        // there was nothing to read (recv MSG_DONTWAIT flag docs)
-        std::this_thread::sleep_for(std::chrono::milliseconds{ 1 });
-        continue;
-      }
-      else
-      {
-        RCLCPP_FATAL(rclcpp::get_logger("my_logger"), "CAN_driver::masterRead: recv failed due to: %s\r\n",
-                     std::strerror(errno));
-        exit(EXIT_FAILURE);
-      }
-    }
-
-    buffer[num_bytes] = '\0';  // Null-terminate the received data
-    struct canfd_frame frame;
-
-    frame = *((struct canfd_frame*)buffer);
-
-    // We don't need to lock the recv invocation
-    std::lock_guard<std::mutex> lock(master_driver->m_read);  // Yay for RAII
-    handle_frame(frame);                                      // TODO Master Handle
-  }
   return 0;
 }
 
@@ -240,18 +194,6 @@ int CAN_driver::arm_write(ControlType controlType)
   }
 
   return 0;
-}
-
-extern "C" {
-int CAN_driver::master_write(DriverVars_t* driver_vars)
-{
-  std::lock_guard<std::mutex> lock(driver_vars->m_write);
-
-  // Write data;
-  // write_data(driver_vars, ....);
-
-  return 0;
-}
 }
 
 int CAN_driver::write_control_type(ControlType controlType)

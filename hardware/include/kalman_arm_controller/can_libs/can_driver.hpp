@@ -44,10 +44,16 @@ typedef struct DriverVars_t
 } DriverVars_t;
 
 extern DriverVars_t arm_driver;
+extern DriverVars_t* master_driver;
 
+extern "C" {
 int init(DriverVars_t*, const char* can_interface);
+int master_write(DriverVars_t*);
+int startMasterRead(DriverVars_t*);
+}
 int startArmRead();
 int armRead();
+int masterRead();
 int read();
 int arm_write(ControlType controlType);
 int write_control_type(ControlType controlType);
