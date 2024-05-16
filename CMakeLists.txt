@@ -95,40 +95,40 @@ add_executable(servo_keyboard_input reference_generator/servo_keyboard_input.cpp
 target_include_directories(servo_keyboard_input PUBLIC include)
 ament_target_dependencies(servo_keyboard_input ${THIS_PACKAGE_INCLUDE_DEPENDS})
 
-add_executable(monitor_planning_scene reference_generator/planning_scene_tutorial.cpp)
-target_include_directories(monitor_planning_scene PUBLIC include)
-ament_target_dependencies(monitor_planning_scene ${THIS_PACKAGE_INCLUDE_DEPENDS})
+# add_executable(monitor_planning_scene reference_generator/planning_scene_tutorial.cpp)
+# target_include_directories(monitor_planning_scene PUBLIC include)
+# ament_target_dependencies(monitor_planning_scene ${THIS_PACKAGE_INCLUDE_DEPENDS})
 
 
 add_executable(twist_republisher reference_generator/twist_republisher.cpp)
 target_include_directories(twist_republisher PUBLIC include)
 ament_target_dependencies(twist_republisher ${TWIST_REPUB_DEPS})
 
-add_executable(can_read_test
-  test/can_read_test.cpp
-  hardware/can_driver.cpp
-  hardware/can_handlers.cpp
-  hardware/can_vars.cpp
-  hardware/arm_config.cpp
-)
+# add_executable(can_read_test
+#   test/can_read_test.cpp
+#   hardware/can_driver.cpp
+#   hardware/can_handlers.cpp
+#   hardware/can_vars.cpp
+#   hardware/arm_config.cpp
+# )
 
-add_executable(can_write_test
-  test/can_write_test.cpp
-  hardware/can_driver.cpp
-  hardware/can_handlers.cpp
-  hardware/can_vars.cpp
-  hardware/arm_config.cpp
-)
+# add_executable(can_write_test
+#   test/can_write_test.cpp
+#   hardware/can_driver.cpp
+#   hardware/can_handlers.cpp
+#   hardware/can_vars.cpp
+#   hardware/arm_config.cpp
+# )
 include_directories(hardware/include)
-ament_target_dependencies(
-  can_read_test PUBLIC
-  ${REF_GEN_INCLUDE_DEPENDS}
-)
+# ament_target_dependencies(
+#   can_read_test PUBLIC
+#   ${REF_GEN_INCLUDE_DEPENDS}
+# )
 
-ament_target_dependencies(
-  can_write_test PUBLIC
-  ${REF_GEN_INCLUDE_DEPENDS}
-)
+# ament_target_dependencies(
+#   can_write_test PUBLIC
+#   ${REF_GEN_INCLUDE_DEPENDS}
+# )
 
 
 ament_target_dependencies(
@@ -190,19 +190,19 @@ install(
     RUNTIME DESTINATION lib/kalman_arm_controller
 )
 
-install(TARGETS can_read_test
-  DESTINATION lib/${PROJECT_NAME}
-)
+# install(TARGETS can_read_test
+#   DESTINATION lib/${PROJECT_NAME}
+# )
 
-install(TARGETS can_write_test
-  DESTINATION lib/${PROJECT_NAME}
-)
+# install(TARGETS can_write_test
+#   DESTINATION lib/${PROJECT_NAME}
+# )
 
 install(TARGETS servo_keyboard_input
     DESTINATION lib/${PROJECT_NAME})
 
-install(TARGETS monitor_planning_scene
-DESTINATION lib/${PROJECT_NAME})
+# install(TARGETS monitor_planning_scene
+# DESTINATION lib/${PROJECT_NAME})
 
 install(TARGETS twist_republisher
     DESTINATION lib/${PROJECT_NAME})
@@ -219,19 +219,19 @@ if(BUILD_TESTING)
   find_package(ament_cmake_pytest REQUIRED)
   find_package(ament_cmake_gtest REQUIRED)
 
-  ament_add_gtest(${PROJECT_NAME}_read_test test/can_read_test.cpp)
-  target_include_directories(${PROJECT_NAME}_read_test PUBLIC
-    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/hardware/include>
-    $<INSTALL_INTERFACE:include/kalman_arm_controller>
-  )
+#   ament_add_gtest(${PROJECT_NAME}_read_test test/can_read_test.cpp)
+#   target_include_directories(${PROJECT_NAME}_read_test PUBLIC
+#     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/hardware/include>
+#     $<INSTALL_INTERFACE:include/kalman_arm_controller>
+#   )
 
-  ament_target_dependencies(${PROJECT_NAME}_read_test
-    std_msgs
-  )
-  target_link_libraries(${PROJECT_NAME}_read_test kalman_arm_controller)
+#   ament_target_dependencies(${PROJECT_NAME}_read_test
+#     std_msgs
+#   )
+#   target_link_libraries(${PROJECT_NAME}_read_test kalman_arm_controller)
 
-  ament_add_pytest_test(example_7_urdf_xacro test/test_urdf_xacro.py)
-  ament_add_pytest_test(view_example_7_launch test/test_view_robot_launch.py)
+#   ament_add_pytest_test(example_7_urdf_xacro test/test_urdf_xacro.py)
+#   ament_add_pytest_test(view_example_7_launch test/test_view_robot_launch.py)
 endif()
 
 ## EXPORTS

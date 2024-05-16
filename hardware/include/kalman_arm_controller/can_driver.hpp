@@ -7,6 +7,8 @@
 #include "arm_config.hpp"
 
 #include <stdio.h>
+#include <thread>
+#include <mutex>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -32,24 +34,36 @@ Potrzebne:
 
 namespace CAN_driver
 {
-    extern int sock;
-    extern struct sockaddr_can addr;
-    extern struct ifreq ifr;
+typedef struct DriverVars_t
+{
+  int sock = 0;
+  struct sockaddr_can addr = {};
+  struct ifreq ifr = {};
+  std::mutex m_read;
+  std::mutex m_write;
+  std::thread reader;
+  bool should_run = true;
+  ~DriverVars_t()
+  {
+    this->should_run = false;
+    this->reader.join();
+    ::close(this->sock);
+  }
+} DriverVars_t;
 
-    extern std::mutex m_read;
-    extern std::mutex m_write;
-    extern std::thread reader;
-    extern bool should_run;
+extern DriverVars_t arm_driver;
 
-    int init();
-    int read();
-    int write(ControlType controlType);
-    int write_control_type(ControlType controlType);
-    int write_joint_setpoint(uint8_t joint_id);
-    int write_joint_posvel(uint8_t joint_id);
-    int write_data(uint16_t can_id, uint8_t *data, uint8_t len);
-    int handle_frame(canfd_frame frame);
-    int close();
-}
+int init(DriverVars_t*, const char* can_interface);
+int startArmRead();
+int armRead();
+int read();
+int arm_write(ControlType controlType);
+int write_control_type(ControlType controlType);
+int write_joint_setpoint(uint8_t joint_id);
+int write_joint_posvel(uint8_t joint_id);
+int write_data(DriverVars_t* driver_vars, uint16_t can_id, uint8_t* data, uint8_t len);
+int handle_frame(canfd_frame frame);
+int close(DriverVars_t* driver_vars);
+}  // namespace CAN_driver
 
-#endif // KALMAN_ARM_CONTROLLER__HARDWARE__CAN_DRIVER_HPP
+#endif  // KALMAN_ARM_CONTROLLER__HARDWARE__CAN_DRIVER_HPP
