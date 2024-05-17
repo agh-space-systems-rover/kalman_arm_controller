@@ -10,6 +10,7 @@
 
 CAN_driver::DriverVars_t CAN_driver::arm_driver = {};
 CAN_driver::DriverVars_t* CAN_driver::master_driver = nullptr;
+std::unordered_map<uint8_t, canCmdHandler_t>* CAN_driver::master_handles = nullptr;
 
 /**
  * @brief Initialize the CAN driver.
@@ -68,10 +69,11 @@ int CAN_driver::startArmRead()
 }
 
 extern "C" {
-int CAN_driver::startMasterRead(DriverVars_t* driver_vars)
+int CAN_driver::startMasterRead(DriverVars_t* driver_vars, std::unordered_map<uint8_t, canCmdHandler_t>* master_handles)
 {
   driver_vars->reader = std::thread(CAN_driver::masterRead);
   CAN_driver::master_driver = driver_vars;
+  CAN_driver::master_handles = master_handles;
   return 0;
 }
 }
@@ -106,7 +108,7 @@ int CAN_driver::masterRead()
 
     // We don't need to lock the recv invocation
     std::lock_guard<std::mutex> lock(master_driver->m_read);  // Yay for RAII
-    handle_frame(frame);                                      // TODO Master Handle
+    handle_frame(frame, CAN_driver::master_handles);
   }
   return 0;
 }
@@ -141,7 +143,7 @@ int CAN_driver::armRead()
 
     // We don't need to lock the recv invocation
     std::lock_guard<std::mutex> lock(arm_driver.m_read);  // Yay for RAII
-    handle_frame(frame);
+    handle_frame(frame, &CAN_handlers::HANDLES);
 
     CAN_vars::update_joint_status();
   }
@@ -193,7 +195,7 @@ int CAN_driver::armRead()
  * @param frame The frame to handle
  * @return int 0 on success, 1 on failure
  */
-int CAN_driver::handle_frame(canfd_frame frame)
+int CAN_driver::handle_frame(canfd_frame frame, std::unordered_map<uint8_t, canCmdHandler_t>* handles)
 {
   // Decode the frame
   uint8_t joint_id = frame.can_id >> 7;
@@ -202,8 +204,8 @@ int CAN_driver::handle_frame(canfd_frame frame)
   {
     // RCLCPP_INFO(rclcpp::get_logger("my_logger"), "Handling frame with ID %03X and length %d, command: %d, joint id:
     // %d\r\n", frame.can_id, frame.len, command, joint_id);
-    if (CAN_handlers::HANDLES.find(command) != CAN_handlers::HANDLES.end())
-      CAN_handlers::HANDLES[command].func(frame.can_id, frame.data, frame.len);
+    if (handles->find(command) != handles->end())
+      (*handles)[command].func(frame.can_id, frame.data, frame.len);
   }
   catch (const std::exception& e)
   {

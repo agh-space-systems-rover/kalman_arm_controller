@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.16)
 project(kalman_arm_controller LANGUAGES CXX)
 
+add_definitions("-DCMAKE_EXPORT_COMPILE_COMMANDS=1 -DCMAKE_CXX_COMPILER=clang++")
+
 if(CMAKE_CXX_COMPILER_ID MATCHES "(GNU|Clang)")
   add_compile_options(-Wall -Wextra)
 endif()
@@ -97,6 +99,7 @@ add_library(
 )
 
 target_compile_features(kalman_arm_controller PUBLIC cxx_std_17)
+target_compile_options(kalman_arm_controller PRIVATE -DCMAKE_EXPORT_COMPILE_COMMANDS=1 -DCMAKE_CXX_COMPILER=clang++)
 target_include_directories(kalman_arm_controller PUBLIC
 $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/hardware/include>
 $<INSTALL_INTERFACE:include/kalman_arm_controller>

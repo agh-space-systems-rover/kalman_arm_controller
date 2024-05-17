@@ -45,22 +45,23 @@ typedef struct DriverVars_t
 
 extern DriverVars_t arm_driver;
 extern DriverVars_t* master_driver;
+extern std::unordered_map<uint8_t, canCmdHandler_t>* master_handles;
 
 extern "C" {
 int init(DriverVars_t*, const char* can_interface);
 int master_write(DriverVars_t*);
-int startMasterRead(DriverVars_t*);
+int startMasterRead(DriverVars_t*, std::unordered_map<uint8_t, canCmdHandler_t>*);
 }
 int startArmRead();
 int armRead();
 int masterRead();
-int read();
+// int read();
 int arm_write(ControlType controlType);
 int write_control_type(ControlType controlType);
 int write_joint_setpoint(uint8_t joint_id);
 int write_joint_posvel(uint8_t joint_id);
 int write_data(DriverVars_t* driver_vars, uint16_t can_id, uint8_t* data, uint8_t len);
-int handle_frame(canfd_frame frame);
+int handle_frame(canfd_frame frame, std::unordered_map<uint8_t, canCmdHandler_t>* handles);
 int close(DriverVars_t* driver_vars);
 }  // namespace CAN_driver
 
