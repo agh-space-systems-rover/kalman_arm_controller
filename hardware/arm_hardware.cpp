@@ -4,6 +4,8 @@
 #include <math.h>
 // #include "arm_hardware.hpp"
 
+const double MAX_POS_DIFF = 0.1;
+
 namespace kalman_arm_controller
 {
 CallbackReturn ArmSystem::on_init(const hardware_interface::HardwareInfo& info)
@@ -26,6 +28,22 @@ CallbackReturn ArmSystem::on_init(const hardware_interface::HardwareInfo& info)
       joint_interfaces[interface.name].push_back(joint.name);
     }
   }
+
+  rclcpp::NodeOptions options;
+  options.arguments({ "--ros-args", "-r", "__node:=arm_hardware" });
+
+  node_ = rclcpp::Node::make_shared("_", options);
+
+  control_type_subscriber_ = node_->create_subscription<std_msgs::msg::UInt8>(
+      "control_type", rclcpp::SystemDefaultsQoS(),
+      [&](const std_msgs::msg::UInt8::SharedPtr msg) { current_control_type = static_cast<ControlType>(msg->data); });
+
+  node_spin_timer_ = node_->create_wall_timer(std::chrono::milliseconds(100), [this]() {
+    if (rclcpp::ok())
+    {
+      rclcpp::spin_some(node_);
+    }
+  });
 
   CAN_driver::init(&CAN_driver::arm_driver, "can1");
   CAN_driver::startArmRead();
@@ -86,11 +104,14 @@ return_type ArmSystem::read_joint_states()
   // CAN_driver::read();
   std::lock_guard<std::mutex> lock(CAN_driver::arm_driver.m_read);
   // RCLCPP_INFO(rclcpp::get_logger("my_logger"), "position: %ld", CAN_vars::joints[0].status.position);
-
+  already_read_ = true;
   for (int i = 0; i < 6; i++)
   {
     joint_position_[i] = CAN_vars::joints[i].moveStatus.position_deg * M_PI / 180.0f;
     joint_velocities_[i] = CAN_vars::joints[i].moveStatus.velocity_deg_s * M_PI / 180.0f;
+
+    if (!CAN_vars::received_joint_status[i])
+      already_read_ = false;
   }
   return return_type::OK;
 }
@@ -105,46 +126,38 @@ return_type ArmSystem::write_joint_commands()
   else
   {
     {
-      // for (int i = 0; i < 6; i++)
-      //     {
-      //         printf("COMMANDS POS FOR JOINT %d: \t last: %f\t setpoint%f\r\n", i,
-      //         CAN_vars::joints[i].moveSetpoint.position_deg, joint_position_command_[i] * 180.0f / M_PI);
-      //         printf("COMMANDS POSVEL FOR JOINT %d: \t last: %f\t setpoint%f\r\n", i,
-      //         CAN_vars::joints[i].moveSetpoint.velocity_deg_s, joint_velocities_command_[i] * 180.0f / M_PI);
-      //     }
+      bool pos_too_far = false;
       for (int i = 0; i < 6; i++)
       {
-        if (CAN_vars::joints[i].moveSetpoint.position_deg != joint_position_command_[i] * 180.0f / M_PI)
+        if (abs(joint_position_command_[i] - joint_position_[i]) > MAX_POS_DIFF)
         {
-          // printf("COMMANDS POS FOR JOINT %d: \t last: %f\t setpoint%f\r\n", i, CAN_vars::joints[i].moveSetpoint.position_deg,
-          // joint_position_command_[i] * 180.0f / M_PI); current_control_type = ControlType::position;
-        }
-        if (CAN_vars::joints[i].moveSetpoint.velocity_deg_s != joint_velocities_command_[i] * 180.0f / M_PI)
-        {
-          // printf("COMMANDS POSVEL FOR JOINT %d: \t last: %f\t setpoint%f\r\n", i,
-          // CAN_vars::joints[i].moveSetpoint.velocity_deg_s, joint_velocities_command_[i] * 180.0f / M_PI);
-          current_control_type = ControlType::posvel;
+          pos_too_far = true;
+          break;
         }
       }
 
-      std::lock_guard<std::mutex> lock(CAN_driver::arm_driver.m_write);
-      for (int i = 0; i < 4; i++)
+      if (current_control_type == ControlType::posvel ||
+          (current_control_type == ControlType::position && !pos_too_far && already_read_))
       {
-        CAN_vars::joints[i].moveSetpoint.position_deg = joint_position_command_[i] * 180.0f / M_PI;
-        CAN_vars::joints[i].moveSetpoint.velocity_deg_s = joint_velocities_command_[i] * 180.0f / M_PI;
-        CAN_vars::joints[i].moveSetpoint.torque_Nm = 0x02fa;
-        CAN_vars::joints[i].moveSetpoint.acceleration_deg_ss = 0xffff;
+        std::lock_guard<std::mutex> lock(CAN_driver::arm_driver.m_write);
+        for (int i = 0; i < 4; i++)
+        {
+          CAN_vars::joints[i].moveSetpoint.position_deg = joint_position_command_[i] * 180.0f / M_PI;
+          CAN_vars::joints[i].moveSetpoint.velocity_deg_s = joint_velocities_command_[i] * 180.0f / M_PI;
+          CAN_vars::joints[i].moveSetpoint.torque_Nm = 0x02fa;
+          CAN_vars::joints[i].moveSetpoint.acceleration_deg_ss = 0xffff;
+        }
+        for (int i = 4; i < 6; i++)
+        {
+          CAN_vars::joints[i].moveSetpointDiff.position_deg = joint_position_command_[i] * 180.0f / M_PI;
+          CAN_vars::joints[i].moveSetpointDiff.velocity_deg_s = joint_velocities_command_[i] * 180.0f / M_PI;
+          CAN_vars::joints[i].moveSetpointDiff.torque_Nm = 0x02fa;
+          CAN_vars::joints[i].moveSetpointDiff.acceleration_deg_ss = 0xffff;
+        }
       }
-      for (int i = 4; i < 6; i++)
-      {
-        CAN_vars::joints[i].moveSetpointDiff.position_deg = joint_position_command_[i] * 180.0f / M_PI;
-        CAN_vars::joints[i].moveSetpointDiff.velocity_deg_s = joint_velocities_command_[i] * 180.0f / M_PI;
-        CAN_vars::joints[i].moveSetpointDiff.torque_Nm = 0x02fa;
-        CAN_vars::joints[i].moveSetpointDiff.acceleration_deg_ss = 0xffff;
-      }
+      // Run write in a separate thread
+      writer = std::async(std::launch::async, [&] { CAN_driver::arm_write(current_control_type); });
     }
-    // Run write in a separate thread
-    writer = std::async(std::launch::async, [&] { CAN_driver::arm_write(current_control_type); });
   }
 
   return return_type::OK;

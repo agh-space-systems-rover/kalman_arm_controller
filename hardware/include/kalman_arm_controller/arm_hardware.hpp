@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include <vector>
 #include <future>
+#include "std_msgs/msg/u_int8.hpp"
 
 #include "can_libs/can_driver.hpp"
 
@@ -40,9 +41,14 @@ protected:
   std::vector<double> joint_position_;
   std::vector<double> joint_velocities_;
 
+  bool already_read_ = false;
+
+  rclcpp::Node::SharedPtr node_;
+  rclcpp::Subscription<std_msgs::msg::UInt8>::SharedPtr control_type_subscriber_;
+  rclcpp::TimerBase::SharedPtr node_spin_timer_;
+
   std::future<void> writer;
 
-  bool received_command = false;
   ControlType current_control_type = ControlType::posvel;
 
   std::unordered_map<std::string, std::vector<std::string>> joint_interfaces = { { "position", {} },

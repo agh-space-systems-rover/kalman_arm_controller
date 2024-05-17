@@ -42,6 +42,8 @@ int handle_joint_fast_status(uint32_t identifier, uint8_t* data, uint8_t len)
   jointMotorFastStatus_t* status = (jointMotorFastStatus_t*)data;
 
   CAN_vars::joints[joint_id].fastStatus = *status;
+  CAN_vars::received_joint_status[joint_id] = true;
+  return 0;
 }
 
 }  // namespace CAN_handlers
