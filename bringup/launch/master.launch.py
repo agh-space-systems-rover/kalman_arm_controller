@@ -13,8 +13,8 @@ def generate_launch_description():
         composable_node_descriptions=[
             ComposableNode(
                 package="kalman_arm_controller",
-                plugin="kalman_master::CanMasterNode",
-                name="can_master_node",
+                plugin="arm_master::MasterToServo",
+                name="master_to_servo_node",
             ),
         ],
         output="screen",

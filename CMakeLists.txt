@@ -30,6 +30,7 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
     std_msgs
     std_srvs
     tf2_eigen
+    kalman_interfaces
     trajectory_msgs)
 
 set(TWIST_REPUB_DEPS
@@ -72,6 +73,16 @@ ament_target_dependencies(${SERVO_CONTROLLER_INPUT} ${THIS_PACKAGE_INCLUDE_DEPEN
 rclcpp_components_register_nodes(${SERVO_CONTROLLER_INPUT} "moveit_servo::JoyToServoPub")
 
 
+set(SERVO_PUBLISHER servo_publisher)
+
+
+# Add executable for using a controller
+add_library(${SERVO_PUBLISHER} SHARED scripts/servo_publisher.cpp)
+target_compile_features(${SERVO_PUBLISHER} PUBLIC cxx_std_20)
+ament_target_dependencies(${SERVO_PUBLISHER} ${THIS_PACKAGE_INCLUDE_DEPENDS})
+rclcpp_components_register_nodes(${SERVO_PUBLISHER} "arm_master::MasterToServo")
+
+
 add_executable(servo_keyboard_input scripts/servo_keyboard_input.cpp)
 target_include_directories(servo_keyboard_input PUBLIC include)
 ament_target_dependencies(servo_keyboard_input ${THIS_PACKAGE_INCLUDE_DEPENDS})
@@ -98,7 +109,7 @@ add_library(
   hardware/can_src/can_vars.cpp
 )
 
-target_compile_features(kalman_arm_controller PUBLIC cxx_std_17)
+target_compile_features(kalman_arm_controller PUBLIC cxx_std_20)
 target_compile_options(kalman_arm_controller PRIVATE -DCMAKE_EXPORT_COMPILE_COMMANDS=1 -DCMAKE_CXX_COMPILER=clang++)
 target_include_directories(kalman_arm_controller PUBLIC
 $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/hardware/include>
@@ -163,6 +174,7 @@ install(TARGETS twist_republisher
 
 install(TARGETS kalman_arm_controller
     ${SERVO_CONTROLLER_INPUT}
+    ${SERVO_PUBLISHER}
     ${MASTER_HARDWARE}
   EXPORT export_kalman_arm_controller
   ARCHIVE DESTINATION lib
