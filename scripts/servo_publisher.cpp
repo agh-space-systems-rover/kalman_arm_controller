@@ -30,7 +30,6 @@ class MasterToServo : public rclcpp::Node
 public:
   MasterToServo(const rclcpp::NodeOptions& options) : Node("servo_publisher", options)
   {
-    printf("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1 atarted constrcutoredsafdfasdgasfdgasdf\n");
     // Setup pub/sub
     // joy_sub_ = this->create_subscription<kalman_interfaces::msg::MasterMessage>(
     //     JOY_TOPIC, rclcpp::SystemDefaultsQoS(),
@@ -49,7 +48,6 @@ public:
     servo_start_client_->async_send_request(std::make_shared<std_srvs::srv::Trigger::Request>());
 
     switch_input_ = this->create_client<moveit_msgs::srv::ServoCommandType>("/servo_node/switch_command_type");
-    printf("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1 finished constructore\n");
   }
 
   ~MasterToServo() override
@@ -70,7 +68,6 @@ public:
 
   void spacemouseCB(kalman_interfaces::msg::MasterMessage::ConstSharedPtr msg)
   {
-    printf("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1 IN CALLBACK\n");
     // Create the messages we might publish
     if (current_command_type_ != moveit_msgs::srv::ServoCommandType::Request::TWIST)
     {
@@ -89,31 +86,18 @@ public:
     twist_msg->twist.angular.z = double(msg->data[5] - 128) / 128.0;
 
     twist_pub_->publish(std::move(twist_msg));
-    printf("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1 OUT CALLBACK\n");
   }
 
   void setCommandType(moveit_msgs::srv::ServoCommandType::Request::_command_type_type command_type)
   {
-    printf("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1 IN cmd_type\n");
     request_ = std::make_shared<moveit_msgs::srv::ServoCommandType::Request>();
     request_->command_type = command_type;
     if (switch_input_->wait_for_service(std::chrono::seconds(1)))
     {
-
-    printf("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1 IN wait succeded\n");
+      RCLCPP_INFO_STREAM(this->get_logger(), "Changing command type to: " << command_type);
       auto result = switch_input_->async_send_request(request_);
-      // FIXME prosze w kodzie
-    //   if (result.get()->success)
-    //   {
-    //     RCLCPP_INFO_STREAM(this->get_logger(), "Switched to input type: " << command_type);
-    //     current_command_type_ = command_type;
-    //   }
-    //   else
-    //   {
-    //     RCLCPP_WARN_STREAM(this->get_logger(), "Could not switch input to: " << command_type);
-    //   }
+      current_command_type_ = command_type;
     }
-    printf("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1 out cmd_type\n");
   }
 
 private:
