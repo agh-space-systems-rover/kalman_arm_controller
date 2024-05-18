@@ -150,14 +150,7 @@ install(
   DIRECTORY hardware/include/
   DESTINATION include/kalman_arm_controller
 )
-install(
-  DIRECTORY description/launch description/ros2_control description/urdf
-  DESTINATION share/kalman_arm_controller
-)
-install(
-  DIRECTORY description/meshes
-  DESTINATION share/kalman_arm_controller
-)
+
 install(
   DIRECTORY bringup/launch bringup/config
   DESTINATION share/kalman_arm_controller

@@ -29,7 +29,7 @@ def generate_launch_description():
             " ",
             PathJoinSubstitution(
                 [
-                    FindPackageShare("kalman_arm_controller"),
+                    FindPackageShare("kalman_arm_moveit_config"),
                     "urdf",
                     "arm.urdf.xacro",
                 ]
