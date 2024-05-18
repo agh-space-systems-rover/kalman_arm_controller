@@ -1,16 +1,14 @@
 #include "kalman_arm_controller/can_libs/can_driver.hpp"
-#include <poll.h>
-#include <mutex>
-#include <vector>
 #include <cerrno>
 #include <cstring>
+#include <mutex>
+#include <poll.h>
+#include <vector>
 
 #define BUFFER_SIZE 1024
 #define TIMEOUT_MS 1  // 5 seconds
 
 CAN_driver::DriverVars_t CAN_driver::arm_driver = {};
-CAN_driver::DriverVars_t* CAN_driver::master_driver = nullptr;
-std::unordered_map<uint8_t, canCmdHandler_t>* CAN_driver::master_handles = nullptr;
 
 /**
  * @brief Initialize the CAN driver.
@@ -68,51 +66,6 @@ int CAN_driver::startArmRead()
   return 0;
 }
 
-extern "C" {
-int CAN_driver::startMasterRead(DriverVars_t* driver_vars, std::unordered_map<uint8_t, canCmdHandler_t>* master_handles)
-{
-  driver_vars->reader = std::thread(CAN_driver::masterRead);
-  CAN_driver::master_driver = driver_vars;
-  CAN_driver::master_handles = master_handles;
-  return 0;
-}
-}
-
-int CAN_driver::masterRead()
-{
-  char buffer[BUFFER_SIZE];
-  while (master_driver->should_run)
-  {
-    ssize_t num_bytes = recv(master_driver->sock, buffer, BUFFER_SIZE, MSG_DONTWAIT);
-
-    if (num_bytes < 0)
-    {
-      if (errno == EAGAIN || errno == EWOULDBLOCK)
-      {
-        // there was nothing to read (recv MSG_DONTWAIT flag docs)
-        std::this_thread::sleep_for(std::chrono::milliseconds{ 1 });
-        continue;
-      }
-      else
-      {
-        RCLCPP_FATAL(rclcpp::get_logger("my_logger"), "CAN_driver::masterRead: recv failed due to: %s\r\n",
-                     std::strerror(errno));
-        exit(EXIT_FAILURE);
-      }
-    }
-
-    buffer[num_bytes] = '\0';  // Null-terminate the received data
-    struct canfd_frame frame;
-
-    frame = *((struct canfd_frame*)buffer);
-
-    // We don't need to lock the recv invocation
-    std::lock_guard<std::mutex> lock(master_driver->m_read);  // Yay for RAII
-    handle_frame(frame, CAN_driver::master_handles);
-  }
-  return 0;
-}
-
 int CAN_driver::armRead()
 {
   char buffer[BUFFER_SIZE];
@@ -167,7 +120,8 @@ int CAN_driver::armRead()
 //       }
 //       else
 //       {
-//         RCLCPP_FATAL(rclcpp::get_logger("my_logger"), "CAN_driver::read: recv failed due to: %s\r\n",
+//         RCLCPP_FATAL(rclcpp::get_logger("my_logger"), "CAN_driver::read: recv
+//         failed due to: %s\r\n",
 //                      std::strerror(errno));
 //         exit(EXIT_FAILURE);
 //       }
@@ -202,14 +156,16 @@ int CAN_driver::handle_frame(canfd_frame frame, std::unordered_map<uint8_t, canC
   uint8_t command = frame.can_id - (joint_id << 7);
   try
   {
-    // RCLCPP_INFO(rclcpp::get_logger("my_logger"), "Handling frame with ID %03X and length %d, command: %d, joint id:
-    // %d\r\n", frame.can_id, frame.len, command, joint_id);
+    // RCLCPP_INFO(rclcpp::get_logger("my_logger"), "Handling frame with ID %03X
+    // and length %d, command: %d, joint id: %d\r\n", frame.can_id, frame.len,
+    // command, joint_id);
     if (handles->find(command) != handles->end())
       (*handles)[command].func(frame.can_id, frame.data, frame.len);
   }
   catch (const std::exception& e)
   {
-    // RCLCPP_INFO(rclcpp::get_logger("my_logger"), "Caught exception: %s\r\n", e.what());
+    // RCLCPP_INFO(rclcpp::get_logger("my_logger"), "Caught exception: %s\r\n",
+    // e.what());
     return 1;
   }
   return 0;
@@ -242,18 +198,6 @@ int CAN_driver::arm_write(ControlType controlType)
   }
 
   return 0;
-}
-
-extern "C" {
-int CAN_driver::master_write(DriverVars_t* driver_vars)
-{
-  std::lock_guard<std::mutex> lock(driver_vars->m_write);
-
-  // Write data;
-  // write_data(driver_vars, ....);
-
-  return 0;
-}
 }
 
 int CAN_driver::write_control_type(ControlType controlType)
@@ -301,6 +245,14 @@ int CAN_driver::write_joint_posvel(uint8_t joint_id)
   return 1;
 }
 
+int CAN_driver::write_gripper_position(uint16_t position)
+{
+  cmdSetGripper_t data;
+  data.gripperPosition = position;
+  uint16_t can_id = CMD_SET_GRIPPER;
+  return write_data(&arm_driver, can_id, (uint8_t*)&data, LEN_CMD_SET_GRIPPER);
+}
+
 int CAN_driver::write_data(DriverVars_t* driver_vars, uint16_t can_id, uint8_t* data, uint8_t len)
 {
   struct canfd_frame frame;
@@ -308,14 +260,6 @@ int CAN_driver::write_data(DriverVars_t* driver_vars, uint16_t can_id, uint8_t* 
   frame.len = len;
   frame.flags = 0;
   memcpy(frame.data, data, len);
-  // printf("Writing frame with ID %03X and length %d\r\n\tData: {", frame.can_id, frame.len);
-  // print data
-  for (int i = 0; i < len; i++)
-  {
-    // printf("%02X ", frame.data[i]);
-  }
-  // printf("}\r\n");
-
   if (::write(driver_vars->sock, &frame, sizeof(frame)) < 0)
   {
     perror("Write");

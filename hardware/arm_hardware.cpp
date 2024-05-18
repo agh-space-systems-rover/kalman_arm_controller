@@ -38,6 +38,10 @@ CallbackReturn ArmSystem::on_init(const hardware_interface::HardwareInfo& info)
       "control_type", rclcpp::SystemDefaultsQoS(),
       [&](const std_msgs::msg::UInt8::SharedPtr msg) { current_control_type = static_cast<ControlType>(msg->data); });
 
+  gripper_subscriber_ = node_->create_subscription<std_msgs::msg::UInt16>(
+      "gripper_position", rclcpp::SystemDefaultsQoS(),
+      [&](const std_msgs::msg::UInt16::SharedPtr msg) { CAN_driver::write_gripper_position(msg->data); });
+
   node_spin_timer_ = node_->create_wall_timer(std::chrono::milliseconds(100), [this]() {
     if (rclcpp::ok())
     {
@@ -103,7 +107,8 @@ return_type ArmSystem::read_joint_states()
 {
   // CAN_driver::read();
   std::lock_guard<std::mutex> lock(CAN_driver::arm_driver.m_read);
-  // RCLCPP_INFO(rclcpp::get_logger("my_logger"), "position: %ld", CAN_vars::joints[0].status.position);
+  // RCLCPP_INFO(rclcpp::get_logger("my_logger"), "position: %ld",
+  // CAN_vars::joints[0].status.position);
   already_read_ = true;
   for (int i = 0; i < 6; i++)
   {
@@ -121,7 +126,8 @@ return_type ArmSystem::write_joint_commands()
   // Do not write if previous write is still in progress
   if (writer.valid() && writer.wait_for(std::chrono::seconds(0)) != std::future_status::ready)
   {
-    // RCLCPP_WARN(rclcpp::get_logger("my_logger"), "Previous write still in progress");
+    // RCLCPP_WARN(rclcpp::get_logger("my_logger"), "Previous write still in
+    // progress");
   }
   else
   {
