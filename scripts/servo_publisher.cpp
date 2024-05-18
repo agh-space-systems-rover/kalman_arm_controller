@@ -19,7 +19,7 @@
 
 // We'll just set up parameters here
 const std::string SPACEMOUSE_TOPIC =
-    "/master_com/master_to_ros/x" + std::format("{:x}", kalman_interfaces::msg::MasterMessage().ARM_SET_JOINTS);
+    "/master_com/master_to_ros/x" + std::format("{:x}", kalman_interfaces::msg::MasterMessage().ARM_SEND_SPACEMOUSE);
 const std::string TWIST_TOPIC = "/servo_node/delta_twist_cmds";
 const std::string JOINT_TOPIC = "/servo_node/delta_joint_cmds";
 
