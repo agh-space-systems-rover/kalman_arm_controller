@@ -1,7 +1,9 @@
+#include <chrono>
 #include <geometry_msgs/msg/twist_stamped.hpp>
 #include <control_msgs/msg/joint_jog.hpp>
 #include <std_srvs/srv/trigger.hpp>
 #include <moveit_msgs/msg/planning_scene.hpp>
+#include <moveit_msgs/srv/servo_command_type.hpp>
 #include <rclcpp/client.hpp>
 #include <rclcpp/experimental/buffers/intra_process_buffer.hpp>
 #include <rclcpp/node.hpp>
@@ -16,7 +18,7 @@
 #include <format>
 
 // We'll just set up parameters here
-const std::string JOY_TOPIC =
+const std::string SPACEMOUSE_TOPIC =
     "/master_com/master_to_ros/x" + std::format("{:x}", kalman_interfaces::msg::MasterMessage().ARM_SET_JOINTS);
 const std::string TWIST_TOPIC = "/servo_node/delta_twist_cmds";
 const std::string JOINT_TOPIC = "/servo_node/delta_joint_cmds";
@@ -29,16 +31,23 @@ public:
   MasterToServo(const rclcpp::NodeOptions& options) : Node("servo_publisher", options)
   {
     // Setup pub/sub
-    joy_sub_ = this->create_subscription<kalman_interfaces::msg::MasterMessage>(
-        JOY_TOPIC, rclcpp::SystemDefaultsQoS(),
-        [this](const kalman_interfaces::msg::MasterMessage::ConstSharedPtr& msg) { return joyCB(msg); });
+    // joy_sub_ = this->create_subscription<kalman_interfaces::msg::MasterMessage>(
+    //     JOY_TOPIC, rclcpp::SystemDefaultsQoS(),
+    //     [this](const kalman_interfaces::msg::MasterMessage::ConstSharedPtr& msg) { return spacemouseCB(msg); });
 
-    joint_pub_ = this->create_publisher<control_msgs::msg::JointJog>(JOINT_TOPIC, rclcpp::SystemDefaultsQoS());
+    spacemouse_sub_ = this->create_subscription<kalman_interfaces::msg::MasterMessage>(
+        SPACEMOUSE_TOPIC, rclcpp::SystemDefaultsQoS(),
+        [this](const kalman_interfaces::msg::MasterMessage::ConstSharedPtr& msg) { return spacemouseCB(msg); });
+
+    // joint_pub_ = this->create_publisher<control_msgs::msg::JointJog>(JOINT_TOPIC, rclcpp::SystemDefaultsQoS());
+    twist_pub_ = this->create_publisher<geometry_msgs::msg::TwistStamped>(TWIST_TOPIC, rclcpp::SystemDefaultsQoS());
 
     // Create a service client to start the ServoNode
     servo_start_client_ = this->create_client<std_srvs::srv::Trigger>("/servo_node/start_servo");
     servo_start_client_->wait_for_service(std::chrono::seconds(1));
     servo_start_client_->async_send_request(std::make_shared<std_srvs::srv::Trigger::Request>());
+
+    switch_input_ = this->create_client<moveit_msgs::srv::ServoCommandType>("/servo_node/switch_command_type");
   }
 
   ~MasterToServo() override
@@ -57,11 +66,56 @@ public:
     }
   }
 
+  void spacemouseCB(kalman_interfaces::msg::MasterMessage::ConstSharedPtr msg)
+  {
+    // Create the messages we might publish
+    if (current_command_type_ != moveit_msgs::srv::ServoCommandType::Request::TWIST)
+    {
+      setCommandType(moveit_msgs::srv::ServoCommandType::Request::TWIST);
+    }
+
+    auto twist_msg = std::make_unique<geometry_msgs::msg::TwistStamped>();
+
+    twist_msg->twist.linear.x = double(msg->data[0] - 128) / 128.0;
+    twist_msg->twist.linear.y = double(msg->data[1] - 128) / 128.0;
+    twist_msg->twist.linear.z = double(msg->data[2] - 128) / 128.0;
+    twist_msg->twist.angular.x = double(msg->data[3] - 128) / 128.0;
+    twist_msg->twist.angular.y = double(msg->data[4] - 128) / 128.0;
+    twist_msg->twist.angular.z = double(msg->data[5] - 128) / 128.0;
+
+    twist_pub_->publish(std::move(twist_msg));
+  }
+
+  void setCommandType(moveit_msgs::srv::ServoCommandType::Request::_command_type_type command_type)
+  {
+    request_ = std::make_shared<moveit_msgs::srv::ServoCommandType::Request>();
+    request_->command_type = command_type;
+    if (switch_input_->wait_for_service(std::chrono::milliseconds(1)))
+    {
+      auto result = switch_input_->async_send_request(request_);
+      if (result.get()->success)
+      {
+        RCLCPP_INFO_STREAM(this->get_logger(), "Switched to input type: " << command_type);
+        current_command_type_ = command_type;
+      }
+      else
+      {
+        RCLCPP_WARN_STREAM(this->get_logger(), "Could not switch input to: " << command_type);
+      }
+    }
+  }
+
 private:
   rclcpp::Subscription<kalman_interfaces::msg::MasterMessage>::SharedPtr joy_sub_;
+  rclcpp::Subscription<kalman_interfaces::msg::MasterMessage>::SharedPtr spacemouse_sub_;
 
   rclcpp::Publisher<control_msgs::msg::JointJog>::SharedPtr joint_pub_;
+  rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr twist_pub_;
   rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr servo_start_client_;
+
+  rclcpp::Client<moveit_msgs::srv::ServoCommandType>::SharedPtr switch_input_;
+  std::shared_ptr<moveit_msgs::srv::ServoCommandType::Request> request_;
+  moveit_msgs::srv::ServoCommandType::Request::_command_type_type current_command_type_ = -1;
 };  // class MasterToServo
 
 }  // namespace arm_master
