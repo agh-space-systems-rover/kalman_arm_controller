@@ -76,6 +76,8 @@ public:
 
     auto twist_msg = std::make_unique<geometry_msgs::msg::TwistStamped>();
 
+    twist_msg->header.stamp = this->now();
+    twist_msg->header.frame_id = "ee";
     twist_msg->twist.linear.x = double(msg->data[0] - 128) / 128.0;
     twist_msg->twist.linear.y = double(msg->data[1] - 128) / 128.0;
     twist_msg->twist.linear.z = double(msg->data[2] - 128) / 128.0;
