@@ -45,7 +45,7 @@ CallbackReturn ArmSystem::on_init(const hardware_interface::HardwareInfo& info)
     }
   });
 
-  CAN_driver::init(&CAN_driver::arm_driver, "can1");
+  CAN_driver::init(&CAN_driver::arm_driver, "can0");
   CAN_driver::startArmRead();
 
   return CallbackReturn::SUCCESS;
