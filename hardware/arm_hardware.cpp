@@ -29,26 +29,6 @@ CallbackReturn ArmSystem::on_init(const hardware_interface::HardwareInfo& info)
     }
   }
 
-  rclcpp::NodeOptions options;
-  options.arguments({ "--ros-args", "-r", "__node:=arm_hardware" });
-
-  node_ = rclcpp::Node::make_shared("_", options);
-
-  control_type_subscriber_ = node_->create_subscription<std_msgs::msg::UInt8>(
-      "control_type", rclcpp::SystemDefaultsQoS(),
-      [&](const std_msgs::msg::UInt8::SharedPtr msg) { current_control_type = static_cast<ControlType>(msg->data); });
-
-  gripper_subscriber_ = node_->create_subscription<std_msgs::msg::UInt16>(
-      "gripper_position", rclcpp::SystemDefaultsQoS(),
-      [&](const std_msgs::msg::UInt16::SharedPtr msg) { CAN_driver::write_gripper_position(msg->data); });
-
-  node_spin_timer_ = node_->create_wall_timer(std::chrono::milliseconds(100), [this]() {
-    if (rclcpp::ok())
-    {
-      rclcpp::spin_some(node_);
-    }
-  });
-
   CAN_driver::init(&CAN_driver::arm_driver, "can0");
   CAN_driver::startArmRead();
 

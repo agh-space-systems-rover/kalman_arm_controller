@@ -293,12 +293,12 @@ int CAN_driver::write_joint_posvel(uint8_t joint_id)
 }
 
 extern "C" {
-int CAN_driver::write_gripper_position(uint16_t position)
+int CAN_driver::write_gripper_position(DriverVars_t* driver_vars, uint16_t position)
 {
   cmdSetGripper_t data;
   data.gripperPosition = position;
   uint16_t can_id = CMD_SET_GRIPPER;
-  return write_data(extra_driver, can_id, (uint8_t*)&data, LEN_CMD_SET_GRIPPER);
+  return write_data(driver_vars, can_id, (uint8_t*)&data, LEN_CMD_SET_GRIPPER);
 }
 }
 

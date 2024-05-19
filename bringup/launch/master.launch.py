@@ -1,6 +1,7 @@
 from launch import LaunchDescription
-from launch_ros.actions import ComposableNodeContainer
+from launch_ros.actions import ComposableNodeContainer, Node
 from launch_ros.descriptions import ComposableNode
+from ament_index_python import get_package_share_path
 
 
 def generate_launch_description():
@@ -23,9 +24,34 @@ def generate_launch_description():
             )
         ],
         output="screen",
+        arguments = ['--ros-args', '--log-level', 'DEBUG', '--log-level','rcl:=INFO'],
+        
     )
+    
+    master_uart_node = Node(
+        package="kalman_master",
+        executable="master_com",
+        parameters=[{"baud_rate": 2000000, "port": "/dev/ttyAMA2"}],
+    )
+    
+    ros_link_node = Node(
+        package="kalman_master",
+        executable="ros_link",
+        parameters=[
+            {
+                "config_path": str(
+                    get_package_share_path("kalman_arm_controller") / "config/ros_link.yaml"
+                ),
+                "side": "rover",
+                "rover_endpoint": "arm",
+            },
+        ],
+    )
+    
     return LaunchDescription(
         [
+            master_uart_node,
+            ros_link_node,
             container,
         ]
     )

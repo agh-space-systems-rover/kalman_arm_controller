@@ -26,6 +26,7 @@
 
 namespace CAN_driver
 {
+extern "C" {
 typedef struct DriverVars_t
 {
   int sock = 0;
@@ -42,7 +43,7 @@ typedef struct DriverVars_t
     ::close(this->sock);
   }
 } DriverVars_t;
-
+}
 extern DriverVars_t arm_driver;
 extern DriverVars_t* extra_driver;
 extern std::unordered_map<uint8_t, canCmdHandler_t>* extra_handlers;
@@ -50,7 +51,7 @@ extern std::unordered_map<uint8_t, canCmdHandler_t>* extra_handlers;
 extern "C" {
 int init(DriverVars_t*, const char* can_interface);
 int startExtraRead(DriverVars_t*, std::unordered_map<uint8_t, canCmdHandler_t>*);
-int write_gripper_position(uint16_t position);
+int write_gripper_position(DriverVars_t* driver_vars, uint16_t position);
 }
 int startArmRead();
 int armRead();

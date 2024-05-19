@@ -33,11 +33,11 @@ namespace kalman_arm
 class ExtraCanNode : public rclcpp::Node
 {
 private:
-  CAN_driver::DriverVars_t extra_driver_;
+  CAN_driver::DriverVars_t extra_driver_ = {};
 
   uint16_t gripper_position_;
 
-  std::future<void> writer;
+//   std::future<void> writer;
   rclcpp::TimerBase::SharedPtr write_timer_;
   rclcpp::TimerBase::SharedPtr read_timer_;
 
@@ -51,24 +51,28 @@ private:
 
   void writeCan()
   {
-    if (writer.valid() && writer.wait_for(std::chrono::seconds(0)) != std::future_status::ready)
-    {
-      RCLCPP_WARN(this->get_logger(), "Previous write still in progress");
-    }
-    else
-    {
-      {
-        std::lock_guard<std::mutex> lock(this->extra_driver_.m_write);
-        // Do something related to variables that write uses
-      }
-      // Run write in a separate thread
-      writer = std::async(std::launch::async, [&] { CAN_driver::write_gripper_position(gripper_position_); });
-    }
+   RCLCPP_INFO(this->get_logger(), "Writing can"); 
+    CAN_driver::write_gripper_position(&extra_driver_, gripper_position_);
+   RCLCPP_INFO(this->get_logger(), "Written can"); 
+    // if (writer.valid() && writer.wait_for(std::chrono::seconds(0)) != std::future_status::ready)
+    // {
+    //   RCLCPP_WARN(this->get_logger(), "Previous write still in progress");
+    // }
+    // else
+    // {
+    //   {
+    //     // std::lock_guard<std::mutex> lock(this->extra_driver_.m_write);
+    //     // Do something related to variables that write uses
+    //   }
+    //   // Run write in a separate thread
+    //   printf("!!!!!! Starting wirter");
+    //   writer = std::async(std::launch::async, [&] { CAN_driver::write_gripper_position(gripper_position_); });
+    // }
   }
 
   void readCan()
   {
-    std::lock_guard<std::mutex> lock(this->extra_driver_.m_read);
+    // std::lock_guard<std::mutex> lock(this->extra_driver_.m_read);
     // Do something related to variables that read uses
     // if ((now() - jointsVelData.lastReceivedTime).seconds() > JOINT_TIMEOUT)
     // {
@@ -103,11 +107,15 @@ public:
     // joint_pub_ = this->create_publisher<control_msgs::msg::JointJog>(JOINT_TOPIC, rclcpp::SystemDefaultsQoS());
     gripper_sub_ = this->create_subscription<std_msgs::msg::UInt16>("gripper_position", rclcpp::SystemDefaultsQoS(),
                                                                     [&](const std_msgs::msg::UInt16::SharedPtr msg) {
-                                                                      gripper_position_ = msg->data;
+                                                                    //   gripper_position_ = msg->data;
+
+   RCLCPP_INFO(this->get_logger(), "Sb called"); 
+    CAN_driver::write_gripper_position(&extra_driver_, msg->data);
+   RCLCPP_INFO(this->get_logger(), "Sb written");
                                                                     });
 
-    write_timer_ = create_wall_timer(std::chrono::milliseconds(WRITE_CALLBACK_PERIOD_MS),
-                                     std::bind(&ExtraCanNode::writeCan, this));
+    // write_timer_ = create_wall_timer(std::chrono::milliseconds(WRITE_CALLBACK_PERIOD_MS),
+    //                                  std::bind(&ExtraCanNode::writeCan, this));
     // read_timer_ =
     //     create_wall_timer(std::chrono::milliseconds(READ_CALLBACK_PERIOD_MS), std::bind(&ExtraCanNode::readCan, this));
   }

@@ -152,7 +152,7 @@ typedef struct __attribute__((__packed__)) {
 typedef struct __attribute__((__packed__)) {
   uint16_t gripperPosition;
 } cmdSetGripper_t;
-#define CMD_SET_GRIPPER 0xBD
+#define CMD_SET_GRIPPER 0xE3
 #define LEN_CMD_SET_GRIPPER 2
 
 #endif // KALMAN_ARM_CONTROLLER__HARDWARE__CAN_MESSAGES_HPP
