@@ -26,13 +26,6 @@ def load_yaml(package_name, file_path):
 def generate_launch_description():
     moveit_config = (
         MoveItConfigsBuilder("kalman_arm")
-        # .robot_description(file_path=PathJoinSubstitution(
-        #         [
-        #             FindPackageShare("kalman_arm_controller"),
-        #             "urdf",
-        #             "arm.urdf.xacro",
-        #         ]
-        #     ))
         .to_moveit_configs()
     )
 
@@ -57,11 +50,6 @@ def generate_launch_description():
 
     return LaunchDescription(
         [
-            # rviz_node,
-            # ros2_control_node,
-            # joint_state_broadcaster_spawner,
-            # panda_arm_controller_spawner,
             servo_node,
-            # container,
         ]
     )

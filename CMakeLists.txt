@@ -74,13 +74,23 @@ rclcpp_components_register_nodes(${SERVO_CONTROLLER_INPUT} "moveit_servo::JoyToS
 
 
 set(SERVO_PUBLISHER servo_publisher)
-
-
-# Add executable for using a controller
 add_library(${SERVO_PUBLISHER} SHARED scripts/servo_publisher.cpp)
 target_compile_features(${SERVO_PUBLISHER} PUBLIC cxx_std_20)
 ament_target_dependencies(${SERVO_PUBLISHER} ${THIS_PACKAGE_INCLUDE_DEPENDS})
 rclcpp_components_register_nodes(${SERVO_PUBLISHER} "arm_master::MasterToServo")
+
+set(EXTRA_CAN extra_can)
+add_library(${EXTRA_CAN} SHARED 
+    scripts/extra_can_node.cpp
+    hardware/can_src/can_driver.cpp
+    hardware/can_src/arm_config.cpp
+    hardware/can_src/can_driver.cpp
+    hardware/can_src/can_handlers.cpp
+    hardware/can_src/can_vars.cpp
+)
+target_compile_features(${EXTRA_CAN} PUBLIC cxx_std_20)
+ament_target_dependencies(${EXTRA_CAN} ${THIS_PACKAGE_INCLUDE_DEPENDS})
+rclcpp_components_register_nodes(${EXTRA_CAN} "kalman_arm::ExtraCanNode")
 
 
 add_executable(servo_keyboard_input scripts/servo_keyboard_input.cpp)
@@ -151,6 +161,7 @@ install(TARGETS twist_republisher
 install(TARGETS kalman_arm_controller
     ${SERVO_CONTROLLER_INPUT}
     ${SERVO_PUBLISHER}
+    ${EXTRA_CAN}
   EXPORT export_kalman_arm_controller
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib

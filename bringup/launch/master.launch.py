@@ -16,6 +16,11 @@ def generate_launch_description():
                 plugin="arm_master::MasterToServo",
                 name="master_to_servo_node",
             ),
+            ComposableNode(
+                package="kalman_arm_controller",
+                plugin="kalman_arm::ExtraCanNode",
+                name="extra_can_node",
+            )
         ],
         output="screen",
     )
